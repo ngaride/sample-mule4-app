@@ -1,0 +1,44 @@
+<p style="text-align: center;"><strong><span style="color: #ff0000;">***** DO NOT REPLY TO THE SENDER ****</span></strong></p>
+<table  border="1" width="635">
+<tbody>
+<tr>
+<td>
+<p style="text-align: center;"><strong>Contractor Cost Management System</strong></p>
+</td>
+</tr>
+<tr>
+<td>
+<h2 style="text-align: center;"><strong>Alert for missing Gatelog Feed</strong></h2>
+<hr /></td>
+</tr>
+<tr>
+<td>
+<p><strong>The threshold specified in the CCM Site Configuration has been exceeded. Please verify the Gatelog Interface is functioning correctly for your Site.</strong></p>
+<hr /></td>
+</tr>
+<tr>
+<table  width="auto"><tbody>
+<tr>
+<td style="width: 10px;"><strong>Site</strong></td>
+<td style="width: 234px;"><strong>Current Date &amp; Time</strong></td>
+<td style="width: 122px;"><strong>Last Gatelog Feed received at</strong></td>
+<td style="width: 122px;"><strong>Alert Threshold (min.)</strong></td>
+<td style="width: 122px;"><strong>Downtime (min.)</strong></td>
+</tr>
+<tr>
+<td style="width: 10px;">#[vars.emailvars.sitename]</td>
+<td style="width: 234px;">#[vars.startDate]</td>
+<td style="width: 122px;">#[vars.endDate]</td>
+<td style="width: 122px;">#[vars.emailvars.thresthold]</td>
+<td style="width: 122px;">#[vars.emailvars.downtime]</td>
+</tr>
+</tbody>
+</table>
+</tr>
+<tr>
+<td>
+<p><strong>DO NOT REPLY TO THIS NOTICE. In case of questions, contact Enterprise Management System Production Support via the Helpdesk </strong></p>
+</td>
+</tr>
+</tbody>
+</table>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="control-m-support:read-job-details" doc:id="e2c3a702-e888-41a4-8cb9-2c7830faa151" >
+		<ee:transform doc:name="+controlmDetails" doc:id="c4f54a83-2134-440f-a908-b1c8cb62718d" >
+			<ee:message >
+				<ee:set-payload resource="dwl/control-m-get-job-details.dwl" />
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<flow name="control-m-support:post-batch-status" doc:id="2eb9bdad-8656-4a71-bb4f-d2849d6f691f" >
+		<logger level="INFO" doc:name="Ready Post Batch Status" doc:id="59a4e66d-335e-4652-941b-d4bc412b5148" message="Ready Post Batch Status: [#[payload]] - Inherited control-M Transaction ID: (#[vars.controlmTransactionId])" />
+		<!--http:request method="POST" doc:name="Control-M API: Post Batch Final Status" doc:id="2076f034-2b8b-4d36-bbe4-88ae1b8a2d9e" config-ref="Common_SAPI_HTTPS_Request_config" outputMimeType="application/json" responseTimeout="999999999" url="${secure::control.m.api.protocol}://${secure::control.m.api.host}:${secure::control.m.api.port}${secure::control.m.api.basepath}${secure::control.m.api.post.batch.status.uri}"/-->
+		<logger level="INFO" doc:name="Print Batch Status Response" doc:id="5f56af6a-62dd-4484-b67d-b164a5209be2" message="Batch Status Response: [#[payload]] - Inherited control-M Transaction ID: (#[vars.controlmTransactionId])" />
+	</flow>
+</mule>

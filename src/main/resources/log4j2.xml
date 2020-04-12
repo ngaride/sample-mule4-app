@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration packages="com.infiniters.aws.cloudwatch,com.mulesoft.ch.logging.appender">
+       <Appenders>
+              <CloudWatchAppender name="CloudWatchAppender"
+                     awsCloudWatchGroupName="/mule/cloudhub-logs/${sys:env.name}" awsCloudWatchStreamName="eai-con-bat-${sys:env.name}-${sys:worker.id}"
+                     awsRegion="us-east-1" awsAccessKey="AKIAVOX7WFVZ4UZDXQRB"
+                     awsSecretKey="${sys:aws.secret}"
+                     awsS3BucketName="${sys:aws.log4j2.bucket.name}">
+                     <PatternLayout pattern="%d [%-6p] %c{1} – %m%n" />
+              </CloudWatchAppender>
+              
+              <RollingFile name="FILE"
+                     fileName="/opt/mule/mule-CURRENT/logs/mule-${sys:domain}.log"
+                     filePattern="/opt/mule/mule-CURRENT/logs/mule-${sys:domain}-%i.log">
+
+            <PatternLayout pattern="[%d{MM-dd HH:mm:ss.SSS}] %-5p %c{1} [%t]: %m%n"/>
+            <DefaultRolloverStrategy max="10"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10 MB" />
+            </Policies>
+        </RollingFile>
+        <Log4J2CloudhubLogAppender name="CLOUDHUB"
+                                   addressProvider="com.mulesoft.ch.logging.DefaultAggregatorAddressProvider"
+                                   applicationContext="com.mulesoft.ch.logging.DefaultApplicationContext"
+                                   appendRetryIntervalMs="${sys:logging.appendRetryInterval}"
+                                   appendMaxAttempts="${sys:logging.appendMaxAttempts}"
+                                   batchSendIntervalMs="${sys:logging.batchSendInterval}"
+                                   batchMaxRecords="${sys:logging.batchMaxRecords}"
+                                   memBufferMaxSize="${sys:logging.memBufferMaxSize}"
+                                   journalMaxWriteBatchSize="${sys:logging.journalMaxBatchSize}"
+                                   journalMaxFileSize="${sys:logging.journalMaxFileSize}"
+                                   clientMaxPacketSize="${sys:logging.clientMaxPacketSize}"
+                                   clientConnectTimeoutMs="${sys:logging.clientConnectTimeout}"
+                                   clientSocketTimeoutMs="${sys:logging.clientSocketTimeout}"
+                                   serverAddressPollIntervalMs="${sys:logging.serverAddressPollInterval}"
+                                   serverHeartbeatSendIntervalMs="${sys:logging.serverHeartbeatSendIntervalMs}"
+                                   statisticsPrintIntervalMs="${sys:logging.statisticsPrintIntervalMs}">
+
+            <PatternLayout pattern="[%d{MM-dd HH:mm:ss}] %-5p %c{1} [%t]: %m%n"/>
+        </Log4J2CloudhubLogAppender>
+       </Appenders>
+       <Loggers>
+        <AsyncRoot level="INFO">
+            <AppenderRef ref="FILE"/>
+            <AppenderRef ref="CLOUDHUB"/>
+            <AppenderRef ref="CloudWatchAppender" />
+        </AsyncRoot>
+        <AsyncLogger name="com.gigaspaces" level="ERROR"/>
+        <AsyncLogger name="com.j_spaces" level="ERROR"/>
+        <AsyncLogger name="com.sun.jini" level="ERROR"/>
+        <AsyncLogger name="net.jini" level="ERROR"/>
+        <AsyncLogger name="org.apache" level="WARN"/>
+        <AsyncLogger name="org.apache.cxf" level="WARN"/>
+        <AsyncLogger name="org.springframework.beans.factory" level="WARN"/>
+        <AsyncLogger name="org.mule" level="INFO"/>
+        <AsyncLogger name="com.mulesoft" level="INFO"/>
+        <AsyncLogger name="org.jetel" level="WARN"/>
+        <AsyncLogger name="Tracking" level="WARN"/>
+    </Loggers>
+</Configuration>
+
+
+

@@ -1,0 +1,134 @@
+#%RAML 1.0 Trait
+responses:
+  400:
+    description:
+      The server cannot or will not process the request due to something that is perceived to be a client error (e.g., malformed request syntax, invalid request message framing, or deceptive request routing).
+    body:
+      application/json:
+        example: |
+          {
+            "code": "400",
+            "message": "BAD_REQUEST",
+            "description": "Bad Request",
+            "transactionId": "803ec5202bd54576992d082da70e6338" 
+          }
+  401:
+    description:
+      The supplied credentials are invalid.
+    body:
+      application/json:
+        example: |
+          {
+            "code": "401",
+            "message": "INVALID_CREDENTIALS",
+            "description": "credentials are invalid",
+            "transactionId": "803ec5202bd54576992d082da70e6338" 
+          }
+  403:
+    description:
+      There is a problem with the credentials that were provided.
+    body:
+      application/json:
+        example: |
+          {
+            "code": "403",
+            "message": "ACCESS_DENIED",
+            "description": "problem with the credentials that were provided",
+            "transactionId": "803ec5202bd54576992d082da70e6338" 
+          }  
+  404:
+    description:
+      The server cannot find the requested resource.
+    body:
+      application/json:
+        example: |
+          {
+            "code": "404",
+            "message": "RESOURCE_NOT_FOUND",
+            "description": "The resource cannot be found",
+            "transactionId": "803ec5202bd54576992d082da70e6338" 
+          }
+  405:
+    description:
+      A request was made of a resource using a request method not supported by that resource; for example, using GET on a form which requires data to be presented via POST, or using PUT on a read-only resource.
+    body:
+      application/json: 
+        example: |
+          {
+            "code": "405",
+            "message": "METHOD_NOT_ALLOWED",
+            "description": "Method not allowed",
+            "transactionId": "803ec5202bd54576992d082da70e6338" 
+          }
+  406:
+    description:
+      The target resource does not have a current representation that would be acceptable to the user agent.
+    body:
+      application/json:
+        example: |
+          {
+            "code": "406",
+            "message": "NOT_ACCEPTABLE",
+            "description": "Not acceptable",
+            "transactionId": "803ec5202bd54576992d082da70e6338" 
+          }
+  415:
+    description:
+      The accept header specified an unsupported media type.
+    body:
+      application/json: 
+        example: |
+          {
+            "code": "415",
+            "message": "UNSUPPORTED_MEDIA_TYPE",
+            "description": "Unsupported media type",
+            "transactionId": "803ec5202bd54576992d082da70e6338" 
+          }
+  500:
+    description:
+      An internal processing error occurred while processing the API request.
+    body:
+      application/json:
+        example: |
+          {
+            "code": "500",
+            "message": "INTERNAL_SERVER_ERROR",
+            "description": "Internal Server Error",
+            "transactionId": "803ec5202bd54576992d082da70e6338" 
+          }
+  597:
+    description:
+      Experience API timeout during dependent service invocation.
+    body:
+      application/json:
+        example: |
+          {
+            "code": "597",
+            "message": "EXP_TIMEOUT",
+            "description": "Experience API Dependent Service Timeout",
+            "transactionId": "803ec5202bd54576992d082da70e6338" 
+          }
+  598:
+    description:
+      Process API timeout during dependent service invocation.
+    body:
+      application/json:
+        example: |
+          {
+            "code": "598",
+            "message": "PROC_TIMEOUT",
+            "description": "Process API Dependent Service Timeout",
+            "transactionId": "803ec5202bd54576992d082da70e6338" 
+          }
+  599:
+    description:
+      System API timeout during dependent service invocation.
+    body:
+      application/json:
+        example: |
+          {
+            "code": "599",
+            "message": "SYS_TIMEOUT",
+            "description": "System API Dependent Service Timeout",
+            "transactionId": "803ec5202bd54576992d082da70e6338" 
+          }

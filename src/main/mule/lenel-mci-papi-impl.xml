@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:inf-core="http://www.mulesoft.org/schema/mule/inf-core" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/inf-core http://www.mulesoft.org/schema/mule/inf-core/current/mule-inf-core.xsd">
+	<flow name="lenel-mciFlow-Scheduler" doc:id="c90c02bd-4813-4ad3-b274-c084cd248299" >
+		<scheduler doc:name="Scheduler" doc:id="d01b1c77-1bd8-4cd0-8d4b-cd0be826abe1">
+			<scheduling-strategy>
+				<cron expression="0 0 0/1 ? * * 2019/1"/>
+			 
+</scheduling-strategy>
+		</scheduler>
+		<set-payload value='#[{
+
+	"RunId": "RunId",
+	"ApiName":"lenel-mci-papi",
+	"JobName": "processAllRefineries",
+	"OrderId": "Scheduledhourly24hrs"
+}]' doc:name="Set Payload" doc:id="7751d912-79f9-4b3d-968e-102c4a263ed8" />
+		<flow-ref doc:name="lenel-mciFlow" doc:id="a654355b-7d71-48f8-8e2f-5c6d0accdb7c" name="lenel-mciFlow"/>
+	</flow>
+	<flow name="lenel-mciFlow" doc:id="5fb17048-a35f-4081-ae6b-d508481f4265">
+		<ee:transform doc:name="Set ControlM Variables" doc:id="2553f55d-b369-4b2f-a43b-7c110df6c226">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="currentTime"><![CDATA[%dw 2.0
+output application/java
+---
+now() >> "CST"]]></ee:set-variable>
+				<ee:set-variable variableName="jobName"><![CDATA[%dw 2.0
+output application/java
+---
+if(payload.JobName?) payload.JobName else null]]></ee:set-variable>
+				<ee:set-variable variableName="runId"><![CDATA[%dw 2.0
+output application/java
+---
+if(payload.RunId?) payload.RunId  else uuid()]]></ee:set-variable>
+				<ee:set-variable variableName="ApiName"><![CDATA[%dw 2.0
+output application/java
+---
+if(payload.ApiName?) payload.ApiName else null]]></ee:set-variable>
+				<ee:set-variable variableName="clientId"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.headers.'client_id']]></ee:set-variable>
+				<ee:set-variable variableName="client_secret"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.headers.'client_secret']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<set-variable value="#[(((now() as DateTime {format: &quot;dd-MM-yyyy'T'HH:mm:ss.SSS&quot;}) &gt;&gt; &quot;UTC&quot;))  as String {format: &quot;yyyy-MM-dd HH:mm:ss.SSS&quot;}]" doc:name="Set endDateTime" doc:id="405cc568-f0b9-4336-82f5-a181fde4002a" variableName="endDateTime"/>
+		<inf-core:custom-logger doc:name="Start" doc:id="3f75964d-a20d-40e0-956b-8f167003064f" message='#["****lenel-mciFlow**** Started processing at" ++ now()]' config-ref="P66_Core_Config"/>
+		<try doc:name="Try" doc:id="2915cbc8-793c-4d07-bb46-e2021ff9c5aa">
+			<ee:transform doc:name="set Query" doc:id="095af26c-bcb9-4515-93cc-1cdb2dad4336">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "host": p('secure::mci.dbHost'),
+  "port":  p('secure::mci.dbPort'),
+  "database":  p('secure::mci.database'),
+  "userName":  p('secure::mci.dbUserName'),
+  "password":  p('secure::mci.dbPassword'),
+  "query": "SELECT * FROM " ++ p('secure::mci.query') ++ "where environment = '" ++ p('env.name') ++ "'"
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+			
+</ee:variables>
+		
+</ee:transform>
+			<inf-core:custom-logger doc:name="prior SQL call" doc:id="b3e6b1cc-5e8d-42e0-a0bc-e8cf0efd4620" config-ref="P66_Core_Config" message='#["Started processing MS-SQL to load Repositories"]' tracePoint="BEFORE_REQUEST"/>
+			<http:request method="POST" doc:name="MS SQL-SAPI" doc:id="b7a0e200-567f-4368-9f17-553fdae2a248" path="/select" responseTimeout="900000" config-ref="HTTP_Request_configuration_MSSQL">
+				</http:request>
+			<inf-core:custom-logger doc:name="After Request" doc:id="6065d06e-5838-42a1-8887-46b4c3d2c729" message='#["MS SQL **GatewaySecurity-ECM-Mule** -  SAPI call  success!"]' tracePoint="AFTER_REQUEST" config-ref="P66_Core_Config"/>
+			<error-handler>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="9c0d5272-b440-4d9b-9fd4-f8c6a941b536" >
+						<async doc:name="Async" doc:id="cca07134-6e98-4472-a77b-aaccd446471b" >
+						<http:request method="POST" doc:name="Email Template" doc:id="4a78e391-dde8-476b-ba19-9bc56bcb89fa" path="/send-template" config-ref="HTTP_Request_configuration-email">
+						<http:body><![CDATA[#[output application/json
+---		
+{
+  "htmlTemplate": "<p style=\"text-align: center;\"><strong><span style=\"color: #ff0000;\">***** DO NOT REPLY TO THE SENDER ****</span></strong></p>\n<table  border=\"1\" width=\"635\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<p style=\"text-align: center;\"><strong>Enterprise Management System</strong></p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<h2 style=\"text-align: center;\"><strong>Alert for missing Gatelog Feed</strong></h2>\n\t\t\t<hr /></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<p><strong> The threshold specified in the Enterprise Management System Site Configuration has been exceeded. Please verify the Gatelog  Interface is functioning correctly for your Site.</strong></p>\n\t\t\t<hr /></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<table  width=\"auto\"><tbody>\n\t\t\t\t<tr>\n\t\t\t\t\t<td style=\"width: 10px;\"><strong>Site</strong></td>\n\t\t\t\t\t<td style=\"width: 234px;\"><strong>Current Date &amp; Time</strong></td>\n\t\t\t\t\t<td style=\"width: 122px;\"><strong>Last Gatelog Feed received at</strong></td>\n\t\t\t\t\t<td style=\"width: 122px;\"><strong>Alert Threshold (min.)</strong></td>\n\t\t\t\t\t<td style=\"width: 122px;\"><strong>Downtime (min.)</strong></td>\n\t\t\t\t</tr>\n\t\t\t\t<tr>\n\t\t\t\t\t<td style=\"width: 10px;\">"++ vars.emailvars.sitename ++"</td>\n\t\t\t\t\t<td style=\"width: 234px;\">"++ vars.startDate ++"</td>\n\t\t\t\t\t<td style=\"width: 122px;\">" ++ vars.endDate ++"</td>\n\t\t\t\t\t<td style=\"width: 122px;\">"++ vars.emailvars.thresthold ++"</td>\n\t\t\t\t\t<td style=\"width: 122px;\">"++ vars.emailvars.downtime ++"</td>\n\t\t\t\t</tr>\n\t\t\t</tbody>\n\t\t</table>\n\t</tr>\n\t<tr>\n\t\t<td>\n\t\t\t<p><strong>DO NOT REPLY TO THIS NOTICE. In case of questions, contact Enterprise Management System Production Support via the Helpdesk </strong></p>\n\t\t</td>\n\t</tr>\n</tbody>\n</table>",
+  "subject":	"Alert for sales mission to SQL server -" ++ "${env.name}",
+  "emailRecipients": p('secure::email.recipients'),
+  "attachment": ""
+}]]]></http:body>
+<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_id" : "${secure::lenel.email.username}",
+	"client_secret" : "${secure::lenel.email.pwd}",
+	"Content-type" : "${secure::email.contenttype}"
+}]]]></http:headers>
+					
+
+</http:request>
+					</async>
+					<inf-core:custom-logger doc:name="After Email sent" doc:id="8b448308-73a6-4a8c-ade5-15024d0453ea" message='#["Email sent success! for "]' tracePoint="AFTER_REQUEST" config-ref="P66_Core_Config" />
+					
+</on-error-continue>
+			
+</error-handler>
+		</try>
+		<ee:transform doc:name="RefineryCollection"
+			doc:id="933f0661-86d3-401f-a85b-22c1effdcc1e">
+			<ee:message >
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="refinery" ><![CDATA[%dw 2.0
+import * from dw::core::Binaries
+output application/json
+---
+payload map {
+"name" : $.refinery_name,
+  "code" : $.refinery_code,
+  "dbHost": $.mssql_host,
+  "dbPort":  $.mssql_port,
+  "database":  $.mssql_database,
+  "dbUserName":  $.mssql_username,
+  "dbPassword":  fromBase64($.mssql_password),
+  "query": $.mssql_query,
+  "directoryPath" : $.sftp_directorypath,
+  "sftpUserName" : $.sftp_username,
+  "sftpQaHost" : $.sftp_qa_host,
+  "sftpProdHost" : $.sftp_prod_host,
+  "sftpPort" : $.sftp_port,
+  "filename" : $.sftp_filename,
+  "contentType" : $.sftp_contenttype,
+  "timeZone" : $.sftp_cid
+  }]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="3811273b-093c-46a7-8af9-ab04adc69af0" collection="vars.refinery">
+			<ee:transform doc:name="Set Refinery_config" doc:id="d3ccf3f3-5045-4fff-bdf2-d14e77ea7d55" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="refinery_config" ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="watermark-objectStoreFlow" doc:id="fb153d08-4515-4689-bf91-1777460038fa" name="watermark-objectStoreFlow" />
+			<try doc:name="Try" doc:id="c6786179-c808-4d43-bd6f-f12989866dc5">
+				<ee:transform doc:name="Set Start Date" doc:id="5dff2bb3-88de-4c66-bfd4-75c44da5bcca">
+					<ee:message>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="startDateTime"><![CDATA[(((vars.refineryLastRunDateTime filter ((item, index) -> item.refinery_name == vars.refinery_config.code)).startDate joinBy "") >> vars.refinery_config.timeZone) as String {format: "yyyy-MM-dd HH:mm:ss.SSS"}]]></ee:set-variable>
+						<ee:set-variable variableName="refineryLocalEndDateTime"><![CDATA[((vars.endDateTime as LocalDateTime {format: "yyyy-MM-dd HH:mm:ss.SSS"}) >> vars.refinery_config.timeZone) as String {format: "yyyy-MM-dd HH:mm:ss.SSS"}]]></ee:set-variable>
+						<ee:set-variable variableName="emailvars" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"sitename" : vars.refinery_config.name,
+	"thresthold" : "0000",
+	"downtime" : "0000"
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<ee:transform doc:name="set Query" doc:id="e50b07e8-d824-44fe-b0c4-ce7414763d42">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "host": vars.refinery_config.dbHost,
+  "port":  vars.refinery_config.dbPort,
+  "database":  vars.refinery_config.database,
+  "userName":  vars.refinery_config.dbUserName,
+  "password":  vars.refinery_config.dbPassword,
+  "query": " SELECT  [unique_company_id],[company_name],[unique_employee_id],[last_name],[first_name],[mi],[event_date_time],[event_direction],[reader_id],[reader_description],[location_code] FROM " ++ vars.refinery_config.query ++ "with (nolock) where event_date_time >'" ++ vars.startDateTime  ++ "'and event_date_time <  '" ++ vars.refineryLocalEndDateTime  ++ "'"
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+					<ee:set-variable variableName="emailvars"><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"sitename" : vars.refinery_config.name,
+	"thresthold" : "0000",
+	"downtime" : "0000"
+}]]></ee:set-variable>
+			
+</ee:variables>
+		
+</ee:transform>
+			<inf-core:custom-logger doc:name="Prior SQL" doc:id="d91d28b6-32ad-4b6d-a802-29e4a92ba4e2" config-ref="P66_Core_Config" message='#["Started processing " ++ vars.refinery_config.name]' tracePoint="BEFORE_REQUEST"/>
+			<http:request method="POST" doc:name="MS SQL-SAPI" doc:id="9afda133-c466-4eb7-a344-45ed455225be" config-ref="HTTP_Request_configuration_MSSQL" path="/select" responseTimeout="900000" >
+				</http:request>
+			<inf-core:custom-logger doc:name="after SQL request" doc:id="a617e59d-17c9-4065-b7e1-17eeb3e36cfc" message='#["MS SQL -  SAPI call  success! for" ++ vars.refinery_config.name ++ "for Time Frame between "  ++ vars.startDateTime ++ "--- and ---" ++ vars.refineryLocalEndDateTime]' tracePoint="AFTER_REQUEST" config-ref="P66_Core_Config"/>
+			<error-handler>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="1269e3ad-d818-4786-9f35-d1afa4964be6" >
+						<async doc:name="Async" doc:id="7f3687e8-8f85-474a-a56a-0a2313c391ca" >
+							<http:request method="POST" doc:name="Email Template" doc:id="38c8cc19-95b5-462a-be61-739532db26d6" config-ref="HTTP_Request_configuration-email" path="/send-template">
+						<http:body><![CDATA[#[output application/json
+---		
+{
+  "htmlTemplate": "<p style=\"text-align: center;\"><strong><span style=\"color: #ff0000;\">***** DO NOT REPLY TO THE SENDER ****</span></strong></p>\n<table  border=\"1\" width=\"635\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<p style=\"text-align: center;\"><strong>Enterprise Management System</strong></p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<h2 style=\"text-align: center;\"><strong>Alert for missing Gatelog Feed</strong></h2>\n\t\t\t<hr /></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<p><strong> The threshold specified in the Enterprise Management System Site Configuration has been exceeded. Please verify the Gatelog  Interface is functioning correctly for your Site.</strong></p>\n\t\t\t<hr /></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<table  width=\"auto\"><tbody>\n\t\t\t\t<tr>\n\t\t\t\t\t<td style=\"width: 10px;\"><strong>Site</strong></td>\n\t\t\t\t\t<td style=\"width: 234px;\"><strong>Current Date &amp; Time</strong></td>\n\t\t\t\t\t<td style=\"width: 122px;\"><strong>Last Gatelog Feed received at</strong></td>\n\t\t\t\t\t<td style=\"width: 122px;\"><strong>Alert Threshold (min.)</strong></td>\n\t\t\t\t\t<td style=\"width: 122px;\"><strong>Downtime (min.)</strong></td>\n\t\t\t\t</tr>\n\t\t\t\t<tr>\n\t\t\t\t\t<td style=\"width: 10px;\">"++ vars.emailvars.sitename ++"</td>\n\t\t\t\t\t<td style=\"width: 234px;\">"++ vars.startDateTime ++"</td>\n\t\t\t\t\t<td style=\"width: 122px;\">" ++ vars.refineryLocalEndDateTime ++"</td>\n\t\t\t\t\t<td style=\"width: 122px;\">"++ vars.emailvars.thresthold ++"</td>\n\t\t\t\t\t<td style=\"width: 122px;\">"++ vars.emailvars.downtime ++"</td>\n\t\t\t\t</tr>\n\t\t\t</tbody>\n\t\t</table>\n\t</tr>\n\t<tr>\n\t\t<td>\n\t\t\t<p><strong>DO NOT REPLY TO THIS NOTICE. In case of questions, contact Enterprise Management System Production Support via the Helpdesk </strong></p>\n\t\t</td>\n\t</tr>\n</tbody>\n</table>",
+ "subject":	"Alert for sales mission to SQL server -" ++ "${env.name}",
+  "emailRecipients": p('secure::email.recipients'),
+  "attachment": ""
+}]]]></http:body>
+							<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_id" : "${secure::lenel.email.username}",
+	"client_secret" : "${secure::lenel.email.pwd}",
+	"Content-type" : "${secure::email.contenttype}"
+}]]]></http:headers>
+							
+					
+</http:request>
+						</async>
+						<inf-core:custom-logger doc:name="after Email" doc:id="5b8cd270-04cd-4727-a515-4b1b6859dfe1" message="Email sent success!" tracePoint="AFTER_REQUEST" config-ref="P66_Core_Config" />
+						<set-payload doc:name="Set null" doc:id="e623b8de-0f79-46e6-842a-c2ccfe85b495" value='#[null]'/>
+					</on-error-continue>
+			
+</error-handler>
+		</try>
+			<choice doc:name="Choice" doc:id="26154b35-69ee-4da0-a45d-08f2036642e9">
+			
+			<when expression='#[payload == null]'>
+					<inf-core:custom-logger doc:name="No Payload" doc:id="e4800a32-f1b0-44b0-a2e5-29f1f6170f3e" config-ref="P66_Core_Config" message='#["Error on connection"]' tracePoint="EXCEPTION"/>
+				</when>
+				<when expression='#[payload != []]'>
+				<ee:transform doc:name="format CSV" doc:id="691d2c23-f56d-4341-98a7-3760c2061913">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/CSV separator="	", header = false
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	unique_company_id: payload01.unique_company_id as String default "",
+	company_name: payload01.company_name default "",
+	unique_employee_id: payload01.unique_employee_id as String default "",
+	last_name: payload01.last_name default "",
+	first_name: payload01.first_name default "",
+	mi: payload01.mi default "",
+	event_date_time: payload01.event_date_time as String default "",
+	event_direction: payload01.event_direction default "",
+	reader_id: payload01.reader_id default "",
+	reader_description: payload01.reader_description default "",
+	location_code: payload01.location_code default ""
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<set-variable value="#[payload]" doc:name="sftp_data" doc:id="4570b709-1df5-4498-843f-d89f937be3bc" variableName="sftp_data" mimeType="text/plain"/>
+				<inf-core:custom-logger doc:name="Custom logger" doc:id="860cf00b-6553-45b0-abbf-761f6691bbdf" message='#["Before Posting file to SFTP for refinery --- " ++ vars.refinery_config.name]' tracePoint="BEFORE_TRANSFORM" config-ref="P66_Core_Config"/>
+					<ee:transform doc:name="set Env_names" doc:id="c98c9074-e83a-4cab-b014-e3befa91029f">
+						<ee:message>
+						</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="env_names" ><![CDATA[%dw 2.0 
+output application/java
+--- 
+[
+	if (isEmpty(vars.refinery_config.sftpQaHost)) null else {"env_name":vars.refinery_config.sftpQaHost},
+	if (isEmpty(vars.refinery_config.sftpProdHost)) null else {"env_name": vars.refinery_config.sftpProdHost }
+]]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					<foreach doc:name="For Each" doc:id="4cad6dc0-6f15-401f-bfb7-af519ead75ac" collection="vars.env_names">
+						<choice doc:name="Choice" doc:id="8f90a196-5a94-44d2-965c-dc0a1c7f6ce5" >
+							<when expression="#[payload != null]">
+								<try doc:name="Try" doc:id="8c8b1839-150e-478d-a64e-adfaef242d39">
+							<set-variable value="#[payload]" doc:name="Set Variable" doc:id="70ecb8a4-05d8-4126-a9fe-413e60463764" variableName="sftp_host" mimeType="application/java" />
+									<set-payload value="#[vars.sftp_data]" doc:name="Set Payload" doc:id="e3479851-7577-4ea2-84fd-b476a1e9ea4f" mimeType="text/plain" />
+							<http:request method="POST" doc:name="send file to SFTP" doc:id="24a09ad5-2f80-409a-bf99-a83a998d0471" config-ref="HTTP_Request_configuration-SFTP-identitykey-SAPI" path="/upload-timesheets">
+			<http:body><![CDATA[#[vars.sftp_data]]]></http:body>
+								<http:headers><![CDATA[#[output application/java
+---
+{
+	"host" : vars.sftp_host.env_name,
+	"port" : vars.refinery_config.sftpPort,
+	"directorypath" : vars.refinery_config.directoryPath,
+	"username" : vars.refinery_config.sftpUserName,
+	"cid" : "${secure::ecm.mci.sftp.sys.req.cid}",
+	"filename" : vars.refinery_config.filename ++ (now() as String {format: "yyyyMMdd_HHmmss"}) ++ ".txt",
+	"content-type" : vars.refinery_config.contentType
+}]]]></http:headers>
+</http:request>
+								<inf-core:custom-logger doc:name="After SFTP" doc:id="93575e96-38c7-4f53-b22a-76d39cf7f00f" message='#["Success! Posting file to SFTP for refinery --- " ++ vars.sftp_host.env_name]' tracePoint="AFTER_REQUEST" config-ref="P66_Core_Config" payload='#[write(payload, "application/json")]'/>
+								<remove-variable doc:name="Remove Variable" doc:id="cc548757-a2a9-4ac5-9c97-37cdf48af921" variableName="sftp_host" />
+									<error-handler>
+										<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8af09dcc-101d-4834-bd06-b12435db2912" >
+											<async doc:name="Async" doc:id="87b0eb88-41e2-404d-9af3-be9324cf13e9" >
+												<set-variable value='#[%dw 2.0 output application/java --- write(payload , "text/plain")]' doc:name="Set Variable" doc:id="2cb39e4e-fbd9-4bd6-be5f-06cd28e005e7" variableName="filecontent" />
+												<http:request method="POST" doc:name="Email Template" doc:id="7022c56f-7d16-426d-aeca-47b696cfdbc6" config-ref="HTTP_Request_configuration-email" path="/send-template">
+								<http:body><![CDATA[#[output application/json
+---
+{
+  "htmlTemplate": "<p style=\"text-align: center;\"><strong><span style=\"color: #ff0000;\">***** DO NOT REPLY TO THE SENDER ****</span></strong></p>\n<table  border=\"1\" width=\"635\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<p style=\"text-align: center;\"><strong>Contractor Cost Management System</strong></p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<h2 style=\"text-align: center;\"><strong>Alert for sales mission to SFTP server</strong></h2>\n\t\t\t<hr /></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<p><strong>The threshold specified in the CCM Site Configuration has been exceeded. Please verify the Gatelog Interface is functioning correctly for your Site.</strong></p>\n\t\t\t<hr /></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<table  width=\"auto\"><tbody>\n\t\t\t\t<tr>\n\t\t\t\t\t<td style=\"width: 10px;\"><strong>Site</strong></td>\n\t\t\t\t\t<td style=\"width: 234px;\"><strong>Current Date &amp; Time</strong></td>\n\t\t\t\t</tr>\n\t\t\t\t<tr>\n\t\t\t\t\t<td style=\"width: 10px;\">"++ vars.emailvars.sitename ++"</td>\n\t\t\t\t\t<td style=\"width: 234px;\">"++ vars.startDateTime ++"</td>\n\t\t\t\t</tr>\n\t\t\t</tbody>\n\t\t</table>\n\t</tr>\n\t<tr>\n\t\t<td>\n\t\t\t<p><strong>DO NOT REPLY TO THIS NOTICE. In case of questions, contact Enterprise Management System Production Support via the Helpdesk </strong></p>\n\t\t</td>\n\t</tr>\n</tbody>\n</table>",
+  "subject" : "Alert for sales mission to SFTP server -" ++ "${env.name}" ,
+  "emailRecipients": p('secure::email.recipients'),
+  "attachment": vars.filecontent
+}]]]></http:body>
+<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_id" : "${secure::lenel.email.username}",
+	"client_secret" : "${secure::lenel.email.pwd}",
+	"Content-type" : "${secure::email.contenttype}"
+}]]]></http:headers>
+							
+</http:request>
+											</async>
+											<inf-core:custom-logger doc:name="email success!" doc:id="aaa8654e-8482-46e4-8664-9d4a49da86f2" message='#["Email sent success! for " ++ vars.refinery_config.name]' config-ref="P66_Core_Config" tracePoint="AFTER_REQUEST" />
+											<set-payload value="#[null]" doc:name="Set null" doc:id="7df3e5ba-7f5a-4c63-82bb-c871373a01c6" />
+										</on-error-continue>
+					
+</error-handler>
+				</try>
+							
+</when>
+							<otherwise >
+								<inf-core:custom-logger doc:name="No Env Found" doc:id="8832cbd5-1ad4-4184-aea0-3bbafd3cfda2" config-ref="P66_Core_Config" message='#["No Environment property available for " ++ vars.refinery_config.name]' tracePoint="EXCEPTION"/>
+							
+</otherwise>
+						</choice>
+					
+</foreach>
+			
+
+
+</when>
+				<otherwise>
+					<async doc:name="Async" doc:id="cce73a86-2d04-4938-adcd-85a54bf893ae" >
+						<http:request method="POST" doc:name="Email Template" doc:id="cc58ce2a-558b-4228-820c-d7230cb9aae5" config-ref="HTTP_Request_configuration-email" path="/send-template">
+					<http:body><![CDATA[#[output application/json
+---
+{
+  "htmlTemplate": "<p style=\"text-align: center;\"><strong><span style=\"color: #ff0000;\">***** DO NOT REPLY TO THE SENDER ****</span></strong></p>\n<table  border=\"1\" width=\"635\">\n\t<tbody>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<p style=\"text-align: center;\"><strong>Contractor Cost Management System</strong></p>\n\t\t\t</td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<h2 style=\"text-align: center;\"><strong>Alert for sales mission to SFTP server</strong></h2>\n\t\t\t<hr /></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t<p><strong>The threshold specified in the CCM Site Configuration has been exceeded. Please verify the Gatelog Interface is functioning correctly for your Site.</strong></p>\n\t\t\t<hr /></td>\n\t\t</tr>\n\t\t<tr>\n\t\t\t<table  width=\"auto\"><tbody>\n\t\t\t\t<tr>\n\t\t\t\t\t<td style=\"width: 10px;\"><strong>Site</strong></td>\n\t\t\t\t\t<td style=\"width: 234px;\"><strong>Current Date &amp; Time</strong></td>\n\t\t\t\t</tr>\n\t\t\t\t<tr>\n\t\t\t\t\t<td style=\"width: 10px;\">"++ vars.emailvars.sitename ++"</td>\n\t\t\t\t\t<td style=\"width: 234px;\">"++ vars.startDate ++"</td>\n\t\t\t\t</tr>\n\t\t\t</tbody>\n\t\t</table>\n\t</tr>\n\t<tr>\n\t\t<td>\n\t\t\t<p><strong>DO NOT REPLY TO THIS NOTICE. In case of questions, contact Enterprise Management System Production Support via the Helpdesk </strong></p>\n\t\t</td>\n\t</tr>\n</tbody>\n</table>",
+  "subject" : "Alert for sales mission to SFTP server",
+  "emailRecipients": p('secure::email.recipients'),
+  "attachment": ""
+}]]]></http:body>
+<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_id" : "${secure::lenel.email.username}",
+	"client_secret" : "${secure::lenel.email.pwd}",
+	"Content-type" : "${secure::email.contenttype}"
+}]]]></http:headers>
+					
+</http:request>
+					</async>
+					<inf-core:custom-logger doc:name="Custom logger" doc:id="aabcedfc-f910-4308-a699-8492e1bd869d" config-ref="P66_Core_Config" message='#["Email Sent Successfully for :" ++  vars.refinery_config.name]' tracePoint="AFTER_REQUEST"/>
+			
+
+</otherwise>
+		</choice>
+			<choice doc:name="Choice" doc:id="578d3cda-cb70-476e-9f7c-a2792b17cd1d">
+							<when expression="payload != null">
+								<ee:transform doc:name="Update StartDate" doc:id="1acea68c-7fd0-4f05-806e-374b1e72c378">
+						<ee:message>
+						</ee:message>
+						<ee:variables>
+							<ee:set-variable variableName="refineryLastRunDateTime"><![CDATA[%dw 2.0
+output application/java
+---
+(vars.refineryLastRunDateTime filter ((item, index) -> item.refinery_name != vars.refinery_config.code)) ++ ((vars.refineryLastRunDateTime filter ((item01, index01) -> item01.refinery_name == vars.refinery_config.code )) map ((item02, index02) -> {
+    "refinery_name": vars.refinery_config.code,
+    "startDate": vars.endDateTime as LocalDateTime {format:  "yyyy-MM-dd HH:mm:ss.SSS"}
+     } ))]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+								<os:store doc:name="Store-lastrunTime" doc:id="cb687d4a-df6b-474e-bb0c-be77ed5c77f5" key="lastrunTime" objectStore="Object_store_lenel">
+						<os:value><![CDATA[#[vars.refineryLastRunDateTime]]]></os:value>
+		
+</os:store>
+								<inf-core:custom-logger doc:name="Logger Updated" doc:id="1b79f32c-68a0-4ade-94b5-3224302b68d6" config-ref="P66_Core_Config" message='#["Object Store Updated For " ++ vars.refinery_config.name]' tracePoint="EXCEPTION" />
+							</when>
+							<otherwise>
+								<inf-core:custom-logger doc:name="No Env Found" doc:id="adea8314-a99f-47d8-9355-922fd5d6060d" config-ref="P66_Core_Config" message='#["After SFTP EXCEPTION! " ++ vars.refinery_config.name]' tracePoint="EXCEPTION" />
+							</otherwise>
+						</choice>
+		
+</foreach>
+		<inf-core:custom-logger doc:name="Success Processing" doc:id="3b2657c6-970d-4c19-8494-5677bb5ce3a6" config-ref="P66_Core_Config" message='#["COMPLTED Processing --- "]' tracePoint="END"/>
+		<flow-ref doc:name="batchstatusFlow" doc:id="439c24fa-84c1-4ceb-b59d-6a77b178eb9c" name="batchstatusFlow"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="0039d6c6-5207-4dc6-b219-8ccc038e3b82" >
+				<flow-ref doc:name="batcherrorstatusFlow" doc:id="2a9d4492-21e3-4a19-b62f-dcd0edc07a90" name="batcherrorstatusFlow" />
+			</on-error-propagate>
+		</error-handler>
+	
+</flow>
+	<flow name="watermark-objectStoreFlow" doc:id="c52d0ec8-1557-4a26-b4e5-81b75a7dace8">
+		<os:contains doc:name="Contains-lastrunTime" doc:id="220f6526-451a-41f8-a7ec-4b4555cb4c57" key="lastrunTime" objectStore="Object_store_lenel"/>
+		<choice doc:name="Choice" doc:id="c5ab8cf8-531d-4d22-b196-3ea68764d818">
+			<when expression="#[payload == true]">
+				<inf-core:custom-logger doc:name="Custom logger" doc:id="29384044-d0d9-4068-b730-7ce3353376d7" message='#["Key found: " ++ payload]' tracePoint="BEFORE_TRANSFORM" config-ref="P66_Core_Config"/>
+				<os:retrieve doc:name="Retrieve-lastrunTime" doc:id="84daf675-3709-4ee5-a6b2-3c164216ba65" key="lastrunTime" target="refineryLastRunDateTime" objectStore="Object_store_lenel">
+				</os:retrieve>
+				<inf-core:custom-logger doc:name="Custom logger" doc:id="0828216b-c30d-4999-b64f-38a781c2e727" config-ref="P66_Core_Config" message="#[payload]" tracePoint="FLOW"/>
+			
+
+</when>
+			<otherwise>
+				<inf-core:custom-logger doc:name="Key not found" doc:id="3286786a-7454-4724-9bcf-70cfefd35220" config-ref="P66_Core_Config" message='#["INITIAL RUN KEY NOT FOUND! Setting up start-date and end-date " ++ payload]' tracePoint="BEFORE_TRANSFORM"/>
+				<ee:transform doc:name="Set RefineryTime" doc:id="957b24d4-9180-4137-83dd-8b2f4a17f56c" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="refineryLastRunDateTime" ><![CDATA[%dw 2.0
+output application/java
+---
+[
+	{
+	"refinery_name": "LCR",
+	"startDate": ((now () >> "UTC") as DateTime {format:"MM/dd/yyyy"} - |P1D|) as DateTime {format: "dd-MM-yyyy'T'HH:mm:ss.SSS"},
+	},{
+	"refinery_name": "GCR",
+	"startDate": ((now () >> "UTC") as DateTime {format:"MM/dd/yyyy"} - |P1D|) as DateTime {format: "dd-MM-yyyy'T'HH:mm:ss.SSS"},
+	},{
+	"refinery_name": "BLR",
+	"startDate": ((now () >> "UTC") as DateTime {format:"MM/dd/yyyy"} - |P1D|) as DateTime {format: "dd-MM-yyyy'T'HH:mm:ss.SSS"},
+	},{
+	"refinery_name": "PRC",
+	"startDate": ((now () >> "UTC") as DateTime {format:"MM/dd/yyyy"} - |P1D|) as DateTime {format: "dd-MM-yyyy'T'HH:mm:ss.SSS"},
+	},{
+	"refinery_name": "SWE",
+	"startDate": ((now () >> "UTC") as DateTime {format:"MM/dd/yyyy"} - |P1D|) as DateTime {format: "dd-MM-yyyy'T'HH:mm:ss.SSS"},
+	},{
+	"refinery_name": "FRN",
+	"startDate": ((now () >> "UTC") as DateTime {format:"MM/dd/yyyy"} - |P1D|) as DateTime {format: "dd-MM-yyyy'T'HH:mm:ss.SSS"},
+	}
+	]]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			
+</otherwise>
+		</choice>
+</flow>
+	<flow name="batchstatusFlow" doc:id="1e5fbc69-147e-49c7-9f06-b4bc5bab0503" >
+		<ee:transform doc:name="Status" doc:id="ee6827cb-395d-4b46-83d3-f1d8a06f8313" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "RunId":vars.runId,
+  "JobName":vars.jobName,
+  "ApiName":vars.ApiName,
+  "Status":"Completed"
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<inf-core:custom-logger doc:name="Custom logger" doc:id="969b5b9d-bcfa-4eb7-adba-90064085837e" message='#["Success processing all refineries!"]' config-ref="P66_Core_Config"/>
+		<http:request method="POST" doc:name="Batch Status Request" doc:id="875c5e87-9596-46bc-ae51-ed8abbfebff0" path="/${secure::eai.common.papi.repo.name}/${secure::batch.completed.status}" config-ref="ControlM_HTTP_Request_configuration">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json",
+	"client_id" : vars.clientId,
+	"client_secret" : vars.clientSecret
+}]]]></http:headers>
+		</http:request>
+	</flow>
+	<flow name="batcherrorstatusFlow" doc:id="238b5721-8122-4b80-a475-8999a5e31bbe" >
+		<ee:transform doc:name="Status" doc:id="e88f3c5a-4d85-4a3e-b4c0-492b15bb1a2a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "RunId":vars.runId,
+  "JobName":vars.jobName,
+  "ApiName":vars.ApiName,
+  "Status":"Failed"
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<inf-core:custom-logger doc:name="Custom logger" doc:id="feea98bd-ff26-4dd3-9baa-fbbd638d1e77" message='#["Error in Transaction"]' tracePoint="BEFORE_REQUEST" config-ref="P66_Core_Config"/>
+		<http:request method="POST" doc:name="Error Status Request" doc:id="4f1a1d9a-d6e8-448d-bdfb-29d62e5d7835" config-ref="ControlM_HTTP_Request_configuration" path="/${secure::eai.common.papi.repo.name}/${secure::batch.error.status}" />
+	</flow>
+</mule>

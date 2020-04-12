@@ -1,0 +1,44 @@
+{
+  "id": "00ujiwr4ejrVXyxAb0h7",
+  "status": "ACTIVE",
+  "created": "2019-02-25T14:30:38.000Z",
+  "activated": "2019-02-25T14:30:43.000Z",
+  "statusChanged": "2019-02-25T14:30:43.000Z",
+  "lastLogin": null,
+  "lastUpdated": "2019-02-25T14:30:43.000Z",
+  "passwordChanged": null,
+  "profile": {
+    "orgLvl4Desc": "TECHNICAL SERVICES",
+    "st": "LA",
+    "lastName": "Cameron",
+    "c": "US",
+    "city": "Lake Charles",
+    "SBUName": "Lake Charles Refinery",
+    "secondEmail": null,
+    "co": "UNITED STATES",
+    "login": "Michael.Cameron@contractor.p66.com",
+    "orgLvl2Desc": "REFINING",
+    "employeeNumber": "00000000",
+    "samaccountname": "mcamer",
+    "firstName": "Michael",
+    "mobilePhone": null,
+    "workState": "Louisiana",
+    "LineOfBusinessName": "Downstream",
+    "orgLvl1Desc": "CONTRACTOR",
+    "location": "Westlake",
+    "userType": "C",
+    "email": "Michael.Cameron@contractor.p66.com",
+    "orgLvl3Desc": "LAKE CHARLES REFINERY"
+  },
+  "credentials": {
+    "provider": {
+      "type": "ACTIVE_DIRECTORY",
+      "name": "phillips66.net"
+    }
+  },
+  "_links": {
+    "self": {
+      "href": "https://p66.oktapreview.com/api/v1/users/00ujiwr4ejrVXyxAb0h7"
+    }
+  }
+}

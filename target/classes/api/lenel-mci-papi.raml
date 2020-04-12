@@ -1,0 +1,44 @@
+#%RAML 1.0
+title: Lenel MCI PAPI
+
+description: This Lenel MCI process API helps us to get data from MS-SQL database and post files on SFTP in xlsx format.
+version: 1.0
+protocols: [HTTPS]
+securitySchemes:
+  basicAuth:
+    description: This API is secured by Basic Authentication
+    type: Basic Authentication
+securedBy: basicAuth
+
+traits: 
+  error: !include exchange_modules/bd2dff6b-b7d9-4a1b-8a47-4870c446cf02/standard-error-responses/1.0.0/standard-error-responses.raml
+  
+uses:
+  batchRequest: dataType/batchRequest.raml
+  
+/process-refinery:
+  post:
+    body:
+      application/json:
+        displayName: Control /Run resource
+        type: batchRequest.batchRequest
+        example: !include Examples/batchRequest.json
+    responses:
+      200:
+        body: 
+          application/json:
+            example: !include Examples/controlMResponse.json
+      400:
+        body:
+          application/json:
+            example: {message: "Invalid Request"}
+      500:
+        body:
+          application/json:
+            example: {message: "Common service ControlM error"}
+
+documentation: 
+    - 
+        title: Lenel MCI PAPI
+        content: This process API helps us to process refinery data from MS Sql database as files to SFTP in xlsx format.
+      

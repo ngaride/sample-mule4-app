@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="okta" format="json">
+      <types:shape format="weave" example="examples/okta-example.json"><![CDATA[%dw 2.0
+type okta = {|
+  id: String, 
+  status: String, 
+  created: String, 
+  activated: String, 
+  statusChanged: String, 
+  lastLogin: String, 
+  lastUpdated: String, 
+  passwordChanged: String, 
+  profile: {|
+    orgLvl4Desc: String, 
+    st: String, 
+    lastName: String, 
+    txtmsgmobile: String, 
+    c: String, 
+    city: String, 
+    SBUName: String, 
+    secondEmail: String, 
+    orgLvl6Desc: String, 
+    co: String, 
+    login: String, 
+    orgLvl2Desc: String, 
+    employeeNumber: String, 
+    samaccountname: String, 
+    firstName: String, 
+    primaryPhone: String, 
+    mobilePhone: String, 
+    workState: String, 
+    orgLvl1Desc: String, 
+    location: String, 
+    userType: String, 
+    orgLvl5Desc: String, 
+    email: String, 
+    orgLvl3Desc: String
+  |}, 
+  credentials: {|
+    provider: {|
+      "type": String, 
+      name: String
+    |}
+  |}, 
+  "_links": {| self: {| href: String |} |}
+|} {"MetadataFormat": "json",
+"example": "{\"id\":\"\",\"status\":\"\",\"created\":\"\",\"activated\":\"\",\"statusChanged\":\"\",\"lastLogin\":\"\",\"lastUpdated\":\"\",\"passwordChanged\":\"\",\"profile\":{\"orgLvl4Desc\":\"\",\"st\":\"\",\"lastName\":\"\",\"txtmsgmobile\":\"\",\"c\":\"\",\"city\":\"\",\"SBUName\":\"\",\"secondEmail\":\"\",\"orgLvl6Desc\":\"\",\"co\":\"\",\"login\":\"\",\"orgLvl2Desc\":\"\",\"employeeNumber\":\"\",\"samaccountname\":\"\",\"firstName\":\"\",\"primaryPhone\":\"\",\"mobilePhone\":\"\",\"workState\":\"\",\"orgLvl1Desc\":\"\",\"location\":\"\",\"userType\":\"\",\"orgLvl5Desc\":\"\",\"email\":\"\",\"orgLvl3Desc\":\"\"},\"credentials\":{\"provider\":{\"type\":\"\",\"name\":\"\"}},\"_links\":{\"self\":{\"href\":\"\"}}}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="everbridge" format="json">
+      <types:shape format="weave" example="examples/metadataExample.json"><![CDATA[%dw 2.0
+type everbridge = Array<{|
+  firstName: String, 
+  lastName: String, 
+  externalId: String, 
+  recordTypeId: Number {"typeId": "double"}, 
+  country: String, 
+  ssoUserId: String, 
+  address: Array<{|
+    city: String, 
+    locationName: String, 
+    state: String, 
+    streetAddress: String, 
+    suite: Null, 
+    country: String, 
+    postalCode: Null
+  |}>, 
+  paths: Array<{|
+    waitTime: Number {"typeId": "int"}, 
+    status: String, 
+    pathId: Number {"typeId": "double"}, 
+    countryCode: String, 
+    value: String, 
+    skipValidation: Boolean
+  |}>
+|}> {"MetadataFormat": "json",
+"example": "[{\"firstName\":\"Rob\",\"lastName\":\"Tison\",\"externalId\":\"tisonr\",\"recordTypeId\":305943405395978,\"country\":\"US\",\"ssoUserId\":\"Rob.Tison@contractor.p66.com\",\"address\":[{\"city\":\"Sweeny\",\"locationName\":\"Sweeny\",\"state\":\"Texas\",\"streetAddress\":\"EMPTY\",\"suite\":null,\"country\":\"US\",\"postalCode\":null}],\"paths\":[{\"waitTime\":0,\"status\":\"A\",\"pathId\":241901148045319,\"countryCode\":\"US\",\"value\":\"000-000-0000\",\"skipValidation\":true},{\"waitTime\":0,\"status\":\"A\",\"pathId\":241901148045324,\"countryCode\":\"US\",\"value\":\"000-000-0000\",\"skipValidation\":true}]}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#575af2be-22b2-4fcb-bcb2-28475692f475">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="okta"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#87ef7d1d-b650-4d0f-9814-faff77077d69">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="okta"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#88314039-4ef9-487d-bec6-fc18e66b721c">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="okta"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="everbridge"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#7d31e8cf-f2a4-4ddb-adf7-781af8356e86"/>
+  <types:enrichment select="#071511f3-3ef5-4e54-920a-b75234a2b9af"/>
+  <types:enrichment select="#618a7c5d-c13b-43f9-9cb9-2f67df362a36"/>
+  <types:enrichment select="#cdb17199-2360-4ced-811d-cfd61afe22c8"/>
+  <types:enrichment select="#4c89eb1c-ea81-4805-a92f-291b497dbfb6"/>
+  <types:enrichment select="#4e89c539-f682-4692-84c4-1441e065f207"/>
+  <types:enrichment select="#91984a0b-4d6b-49c3-a72b-a79f22716a6a"/>
+  <types:enrichment select="#3080ea8d-3cbe-4634-817f-69ddb1329c44"/>
+  <types:enrichment select="#2016e438-df50-4b49-ae5b-60917d13d7d9"/>
+</types:mule>

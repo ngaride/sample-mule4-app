@@ -1,0 +1,625 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<flow name="corporate-okta-everbridge-userdataFlow-impl" doc:id="d5b1c905-422b-442c-a06d-8735501eec52">
+		<ee:transform doc:name="Set ControlM Variables"
+			doc:id="4e89c539-f682-4692-84c4-1441e065f207">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="currentTime"><![CDATA[%dw 2.0
+output application/java
+---
+now() >> "CST"]]></ee:set-variable>
+				<ee:set-variable variableName="jobName"><![CDATA[%dw 2.0
+output application/java
+---
+if(payload.JobName?) payload.JobName else null]]></ee:set-variable>
+				<ee:set-variable variableName="runId"><![CDATA[%dw 2.0
+output application/java
+---
+if(payload.RunId?) payload.RunId  else uuid()]]></ee:set-variable>
+				<ee:set-variable variableName="ApiName"><![CDATA[%dw 2.0
+output application/java
+---
+if(payload.ApiName?) payload.ApiName else null]]></ee:set-variable>
+				<ee:set-variable variableName="clientId"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.headers.'client_id']]></ee:set-variable>
+				<ee:set-variable variableName="client_secret"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.headers.'client_secret']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Set Logging Variables"
+			doc:id="4c89eb1c-ea81-4805-a92f-291b497dbfb6">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="correlationId"><![CDATA[%dw 2.0
+output application/java
+---
+vars.runId]]></ee:set-variable>
+				<ee:set-variable variableName="flowName"><![CDATA[%dw 2.0
+output application/java
+---
+if(vars.ApiName != null) attributes.queryParams.ApiName else null]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<json-logger:logger doc:name="Logger: Job Start"
+			doc:id="81681abe-5445-4f2e-b362-2b6770d7df6c"
+			correlationId="#[if ((attributes.headers.'X-CorrelationId' == null) or (attributes.headers.'X-CorrelationId' == '')) correlationId else attributes.headers.'X-CorrelationId']"
+			config-ref="JSON_Logger_Config" message="content" />
+		<os:retrieve doc:name="Retrieve Last Date Ran"
+			doc:id="18cf6e71-2ca0-467c-9d05-231dce7ab91f" key="lastUpdatedDate"
+			objectStore="OKTA_Everbridge_Date_ObjectStore">
+			<os:default-value><![CDATA[#[(now() >> 'UTC') as String {format: "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"}]]]></os:default-value>
+		</os:retrieve>
+		<set-variable value="#[message.payload]" doc:name="lastUpdatedDateVar"
+			doc:id="89583f1b-bcb5-4d04-9d65-63724d7ac71e" variableName="lastUpdatedDateVar" />
+		<json-logger:logger doc:name="Logger: Log lastUpdated Date"
+			doc:id="7f4c13a7-4375-43ab-8616-ecb7362a0404" config-ref="JSON_Logger_Config"
+			message="#[vars.lastUpdatedDateVar]"
+			correlationId="#[if ((attributes.headers.'X-CorrelationId' == null) or (attributes.headers.'X-CorrelationId' == '')) correlationId else attributes.headers.'X-CorrelationId']" />
+		<flow-ref doc:name="corporate-okta-everbridge-getRecordType"
+			doc:id="5c10c8de-38c6-475e-9b07-597dad038478" name="corporate-okta-everbridge-getRecordType" />
+		<flow-ref doc:name="corporate-okta-everbridge-getContactPath"
+			doc:id="e9e6a130-e2ef-48dc-8d8f-a63f2df924be" name="corporate-okta-everbridge-getContactPath" />
+		<flow-ref doc:name="corporate-okta-everbridge-getContactAttributes"
+			doc:id="c327ee48-1d89-4089-9af0-185043720a7e" name="corporate-okta-everbridge-getContactAttributes" />
+		<set-variable value="#[(now() &gt;&gt; &quot;UTC&quot;) as String {format: &quot;yyyy-MM-dd'T'HH:mm:ss.SSS'Z'&quot;}]" doc:name="currentTime" doc:id="816f7794-09e2-437c-a890-a4512929c47f" variableName="currentTime" />
+		<http:request method="GET" doc:name="OKTA SAPI"
+			doc:id="0b97de51-a324-42bb-a38b-cc208bf58502"
+			path="/${secure::eai.sapi.repo.name}/${secure::okta.sapi.path}/listUsers/listUsersUpdatedAfterTimestamp"
+			config-ref="okta_sapi_HTTPS_Request_configuration" responseTimeout="100000">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_id" : p('secure::okta.sapi.client.id'),
+	"client_secret" : p('secure::okta.sapi.client.secret')
+}]]]></http:headers>
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	lastUpdated : vars.lastUpdatedDateVar
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="To Everbridge Format"
+			doc:id="88314039-4ef9-487d-bec6-fc18e66b721c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+// Strip phone numbers of any non-numeric characters.
+fun stripStr(str) = str replace /[^\.\d]/ with ""
+
+//  Country Phone Number Formatting.
+fun testLengthandCountry(str, country) = using (x = ((sizeOf(stripStr(str))) default 0)) if (x < 14 and x > 9) (str) else (null)
+fun countrySelector(str, country) = if (country == "GB") (toGBPhoneFormat(getGBPhoneNumber(str))) else if (country == "US" or country == "CA") (toUSPhoneFormat(getUSPhoneNumber(str))) else (null)
+
+//  Great Britain Formatting Rules
+fun toGBPhoneFormat(str) = str[0 to 3] ++ "-" ++ str[4 to 9]
+fun getGBPhoneNumber(str) = using(x = ((sizeOf(stripStr(str))) default 0)) ((stripStr(str)) default 0)[x-10 to x-1]
+
+//  United States Formatting Rules
+fun toUSPhoneFormat(str) = str[0 to 2] ++ "-" ++ str[3 to 5] ++ "-" ++ str[6 to 9]
+fun getUSPhoneNumber(str) = using(x = ((sizeOf(stripStr(str))) default 0)) ((stripStr(str)) default 0)[x-10 to x-1]
+---
+(payload filter (($."profile"."userType" == "E" or $."profile"."userType" =="C") and ($."profile"."c" =="US" or $."profile"."c" == "CA" or $."profile"."c" == "GB")) map (users, index) -> {
+	"status": users.status,
+    "activated": users.activated,
+    "statusChanged": users.statusChanged,
+    "lastUpdated": users.lastUpdated,
+		everbridge: {  
+			"firstName": users.profile.firstName,
+			"lastName": users.profile.lastName,
+			"externalId": users.profile.samaccountname,
+			"recordTypeId": vars.recordTypeVar,
+			"country": users.profile.c,
+			"ssoUserId": users.profile.email,
+				"address": [{  //  These are the fields that go in the 'address' are in Everbridge's system.
+					"city": users.profile.city default "EMPTY",
+					"locationName": users.profile.city default "EMPTY",
+					"state": users.profile.workState default "Oklahoma",
+					"streetAddress": users.profile.streetAddress default "EMPTY",
+					"suite": users.profile.physicalDeliveryOfficeName,
+					"country": users.profile.c,
+					"postalCode": users.profile.postalAddress
+				}],
+				"paths": [({  //  The 'paths' are the avenues of contacting the users in an emergency.
+					"waitTime": 0,
+        			"status": "A",
+        			"pathId": vars.SMS1Var, // OKTA mobilePhone -> Everbridge SMS 1
+        			"countryCode": users.profile.c,
+        			"value": countrySelector(users.profile.mobilePhone, users.profile.c),
+        			"skipValidation": false
+				}) if (testLengthandCountry(users.profile.mobilePhone, users.profile.c) != null),
+				({
+					"waitTime": 0,
+        			"status": "A",
+        			"pathId": vars.phone1Var, // OKTA mobilePhone -> Everbridge Phone 1
+        			"countryCode": users.profile.c,
+        			"value": countrySelector(users.profile.mobilePhone, users.profile.c),
+        			"skipValidation": false
+				}) if (testLengthandCountry(users.profile.mobilePhone, users.profile.c) != null),
+				({
+					"waitTime": 0,
+        			"status": "A",
+        			"pathId": vars.phone2Var, // OKTA primaryPhone (Office #) -> Everbridge Phone 2
+        			"countryCode": users.profile.c,
+        			"value": countrySelector(users.profile.primaryPhone, users.profile.c),
+        			"skipValidation": false
+				}) if (testLengthandCountry(users.profile.primaryPhone, users.profile.c) != null),
+				({
+					"waitTime": 0,
+        			"status": "A",
+        			"pathId": vars.email1Var, // OKTA primaryEmail -> Everbridge Email Address 1
+        			"countryCode": users.profile.c,
+        			"value": users.profile.email,
+        			"skipValidation": false
+				}) if (users.profile.email != null),
+				({
+					"waitTime": 0,
+        			"status": "A",
+        			"pathId": vars.phone4Var, // OKTA homePhone (Home #) -> Everbridge Phone 4
+        			"countryCode": users.profile.c,
+        			"value": countrySelector(users.profile.homePhone, users.profile.c),
+        			"skipValidation": false
+				}) if (testLengthandCountry(users.profile.homePhone, users.profile.c) != null)],
+				"contactAttributes":	[ // These are company-specific fields such as title and organization levels.
+					({
+						"values": [ users.profile.employeeNumber ],
+						"orgAttrId": vars.employeeIDVar,
+						"name": "Employee ID"
+					}) if (users.profile.employeeNumber != null),
+					({
+						"values": [ users.profile.orgLvl1Desc ],
+						"orgAttrId": vars.orgLevel1Var,
+						"name": "Company Name"
+					}) if (users.profile.orgLvl1Desc != null),
+					({
+						"values": [ users.profile.SBUName ],
+						"orgAttrId": vars.sbuNameVar,
+						"name": "SBU Name"
+					}) if (users.profile.SBUName != null),
+					({
+						"values": [ users.profile.LineOfBusinessName ],
+						"orgAttrId": vars.lineOfBusinessVar,
+						"name": "Line of Business"
+					}) if (users.profile.LineOfBusinessName != null),
+					({
+						"values": [ users.profile.orgLvl2Desc ],
+						"orgAttrId": vars.orgLevel2Var,
+						"name": "Org Level 2"
+					}) if (users.profile.orgLvl2Desc != null),
+					({
+						"values": [ users.profile.orgLvl3Desc ],
+						"orgAttrId": vars.orgLevel3Var,
+						"name": "Org Level 3"
+					}) if (users.profile.orgLvl3Desc != null),
+					({
+						"values": [ users.profile.orgLvl4Desc ],
+						"orgAttrId": vars.orgLevel4Var,
+						"name": "Org Level 4"
+					}) if (users.profile.orgLvl4Desc != null),
+					({
+						"values": [ users.profile.orgLvl5Desc ],
+						"orgAttrId": vars.orgLevel5Var,
+						"name": "Org Level 5"
+					}) if (users.profile.orgLvl5Desc != null),
+					({
+						"values": [ users.profile.orgLvl6Desc ],
+						"orgAttrId": vars.orgLevel6Var,
+						"name": "Org Level 6"
+					}) if (users.profile.orgLvl6Desc != null),
+					({
+						"values": [ users.profile.orgLvl7Desc ],
+						"orgAttrId": vars.orgLevel7Var,
+						"name": "Org Level 7"
+					}) if (users.profile.orgLvl7Desc != null),
+					({
+						"values": [ users.profile.orgLvl8Desc ],
+						"orgAttrId": vars.orgLevel8Var,
+						"name": "Org Level 8"
+					}) if (users.profile.orgLvl8Desc != null),
+					({
+						"values": [ users.profile.location ],
+						"orgAttrId": vars.workLocationVar,
+						"name": "Work Location"
+					}) if (users.profile.location != null),
+					({
+						"values": [ users.profile.title ],
+						"orgAttrId": vars.titleVar,
+						"name": "Title"
+					}) if (users.profile.title != null)				
+				]
+				
+			}	
+})]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Break Payload into Variables"
+			doc:id="071511f3-3ef5-4e54-920a-b75234a2b9af">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="userDeprovisionVar"><![CDATA[%dw 2.0
+output application/json
+---
+(payload filter ($."status" == "DEPROVISIONED")).*"everbridge"."externalId"]]></ee:set-variable>
+				<ee:set-variable variableName="userUpdateNewVar"><![CDATA[%dw 2.0
+output application/json
+---
+(payload filter ($."status" == "ACTIVE")).*"everbridge"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform
+			doc:name="Set Variables for Active and Deprovisioned Array sizeOf Functions"
+			doc:id="91984a0b-4d6b-49c3-a72b-a79f22716a6a">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="userDeprovisionArraySize"><![CDATA[%dw 2.0
+output application/java
+---
+if (vars.userDeprovisionVar == null) ('0') else sizeOf(vars.userDeprovisionVar)]]></ee:set-variable>
+				<ee:set-variable variableName="userUpdateNewArraySize"><![CDATA[%dw 2.0
+output application/java
+---
+if(vars.userUpdateNewVar == null) ('0') else sizeOf(vars.userUpdateNewVar)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<scatter-gather doc:name="Scatter-Gather"
+			doc:id="e47c2414-d799-43df-96d9-29e497ed48e6">
+			<route>
+				<choice doc:name="Check userUpdateVar Variable for Null Status"
+					doc:id="6ecba3d1-0ee9-404b-b3ca-9200596aa3e0">
+					<when expression="#[vars.userUpdateNewVar == null]">
+						<json-logger:logger doc:name="Logger: userUpdateVar is Null"
+							doc:id="0a6e6ff8-fb23-432c-ae14-7023e158aa15" tracePoint="FLOW"
+							correlationId="#[if ((attributes.headers.'X-CorrelationId' == null) or (attributes.headers.'X-CorrelationId' == '')) correlationId else attributes.headers.'X-CorrelationId']"
+							message="No updated users to process." config-ref="JSON_Logger_Config" />
+					</when>
+					<otherwise>
+						<set-payload value="#[vars.userUpdateNewVar]"
+							doc:name="Update User Payload" doc:id="d2987dd6-29b4-4eb9-b2b3-66f1b222dba9" />
+						<try doc:name="Try" doc:id="9bb797c1-a4d5-4863-b146-fc642a85b4f9">
+							<http:request method="POST" doc:name="Update in Everbridge SAPI"
+								doc:id="e2a8fd3b-b107-4807-8265-ed306d75b412"
+								path="/${secure::eai.sapi.repo.name}/${secure::everbridge.sapi.path}/contacts/batch"
+								outputMimeType="application/json" config-ref="everbridge_sapi_HTTPS_Request_configuration"
+								responseTimeout="200000">
+								<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_id" : p('secure::everbridge.sapi.client.id'),
+	"Content-Type" : "application/json",
+	"client_secret" : p('secure::everbridge.sapi.client.secret'),
+	"organizationId" : p('secure::everbridge.org.id')
+}]]]></http:headers>
+								<http:query-params><![CDATA[#[output application/java
+---
+{
+	"idType" : "externalId",
+	"updateType" : "partial"
+}]]]></http:query-params>
+							</http:request>
+							<error-handler>
+								<on-error-propagate enableNotifications="true"
+									logException="true" doc:name="On Error Propagate"
+									doc:id="cd72c476-84fe-438d-816d-aefce633f880">
+									<json-logger:logger doc:name="Logger: Error in Post to Everbridge"
+										doc:id="0e81574d-65cb-4b12-b14b-3e281b14505f" config-ref="JSON_Logger_Config"
+										priority="ERROR" tracePoint="AFTER_REQUEST"
+										correlationId="#[if ((attributes.headers.'X-CorrelationId' == null) or (attributes.headers.'X-CorrelationId' == '')) correlationId else attributes.headers.'X-CorrelationId']"
+										message="#['Unsuccessfully posted ' ++ if(vars.userUpdateNewArraySize != null) (vars.userUpdateNewArraySize as String) else ('0') ++ ' new/updated users to Everbridge using last-updated time of ' ++ if(vars.lastUpdatedDateVars != null) (vars.lastUpdatedDateVars as String)  else (now() &gt;&gt; 'UTC' as String {format: &quot;yyyy-MM-dd'T'HH:mm:ss.SSS'Z'&quot;}) ++ '.']" />
+								</on-error-propagate>
+							</error-handler>
+						</try>
+						<json-logger:logger doc:name="Logger: Successful Post to Everbridge"
+							doc:id="b84c19c9-0ccf-46f6-ad38-01e492295a10" config-ref="JSON_Logger_Config"
+							correlationId="#[if ((attributes.headers.'X-CorrelationId' == null) or (attributes.headers.'X-CorrelationId' == '')) correlationId else attributes.headers.'X-CorrelationId']"
+							tracePoint="AFTER_REQUEST"
+							message="#['Successfully posted ' ++ if(vars.userUpdateNewArraySize != null) (vars.userUpdateNewArraySize as String) else ('0') ++ ' new/updated users to Everbridge using last-updated time of ' ++ if(vars.lastUpdatedDateVars != null) (vars.lastUpdatedDateVars as String)  else (now() &gt;&gt; 'UTC' as String {format: &quot;yyyy-MM-dd'T'HH:mm:ss.SSS'Z'&quot;}) ++ '.']" />
+					</otherwise>
+				</choice>
+			</route>
+			<route>
+				<choice doc:name="Check userDeprovisionVar Variable for Null Status"
+					doc:id="3c19f922-8106-4342-81c5-946039fd8149">
+					<when expression="#[vars.userDeprovisionVar == null]">
+						<json-logger:logger doc:name="Logger: userDeprovisionVar is Null"
+							doc:id="3825d97f-06e6-4412-bb03-cab1dc63971d"
+							correlationId="#[if ((attributes.headers.'X-CorrelationId' == null) or (attributes.headers.'X-CorrelationId' == '')) correlationId else attributes.headers.'X-CorrelationId']"
+							config-ref="JSON_Logger_Config" tracePoint="FLOW"
+							message="No deprovisioned users to process." />
+					</when>
+					<otherwise>
+						<set-payload value="#[vars.userDeprovisionVar]"
+							doc:name="Deprovision User Payload" doc:id="316eb00f-fc74-41cc-8d09-bc66e83f8d68"
+							mimeType="application/json" />
+						<try doc:name="Try" doc:id="22cb6821-7448-4f74-8b56-f0ab150b7d68">
+							<http:request method="DELETE" doc:name="Deprovision in Everbridge"
+								doc:id="d93991e5-4b29-41b9-9f07-3fd3fb950ac9"
+								path="${secure::eai.sapi.repo.name}/${secure::everbridge.sapi.path}/contacts/batch"
+								outputMimeType="application/json" config-ref="everbridge_sapi_HTTPS_Request_configuration"
+								responseTimeout="0">
+								<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json",
+	"client_id" : p('secure::everbridge.sapi.client.id'),
+	"client_secret" : p('secure::everbridge.sapi.client.secret'),
+	"organizationId" : p('secure::everbridge.org.id')
+}]]]></http:headers>
+								<http:query-params><![CDATA[#[output application/java
+---
+{
+	"idType" : "externalId",
+	"Content-Type" : "application/json"
+}]]]></http:query-params>
+							</http:request>
+							<error-handler>
+								<on-error-continue enableNotifications="true"
+									logException="true" doc:name="On Error Continue"
+									doc:id="9d108333-831e-4115-9a0b-95fe63a5df05" type="HTTP:UNAUTHORIZED">
+									<logger level="INFO" doc:name="Logger"
+										doc:id="b47892b8-cef8-49b2-9878-f24370ffab05" message="Invalid Id's sent to Everbridge" />
+								</on-error-continue>
+							</error-handler>
+						</try>
+						<json-logger:logger doc:name="Logger: Successful Post to Everbridge"
+							doc:id="ca1da077-34eb-4345-9844-c2db86fc8af7" config-ref="JSON_Logger_Config"
+							tracePoint="EXCEPTION"
+							correlationId="#[if ((attributes.headers.'X-CorrelationId' == null) or (attributes.headers.'X-CorrelationId' == '')) correlationId else attributes.headers.'X-CorrelationId']"
+							message="#['Successfully deprovisioned ' ++ if(vars.userDeprovisionArraySize != null) (vars.userDeprovisionArraySize as String) else ('0') ++ '  users from Everbridge using last-updated time of ' ++ if(vars.lastUpdatedDateVars != null) (vars.lastUpdatedDateVars as String)  else (now() &gt;&gt; 'UTC' as String {format: &quot;yyyy-MM-dd'T'HH:mm:ss.SSS'Z'&quot;}) ++ '.']" />
+					</otherwise>
+				</choice>
+			</route>
+		</scatter-gather>
+		<os:store doc:name="Store Current Run Time" doc:id="ac93f340-3891-4d54-b2e7-bf8574e94a87"
+			key="lastUpdatedDate" objectStore="OKTA_Everbridge_Date_ObjectStore">
+			<os:value><![CDATA[#[vars.currentTime]]]></os:value>
+		</os:store>
+		<flow-ref doc:name="ControlM Callback" doc:id="42e43ef5-a911-40aa-9a38-488bb30ac1a7"
+			name="corporate-okta-everbridge-controlm-batchstatus" />
+		<error-handler>
+			<on-error-continue enableNotifications="true"
+				logException="true" doc:name="On Error Continue" doc:id="a0a539df-b6ae-435f-8b23-f5795ccf9138">
+				<set-variable value="#[error.errorType.'identifier']"
+					doc:name="Error Type" doc:id="9e31ae45-4d78-4feb-815b-061d9f9368e5"
+					variableName="errorType" />
+				<set-variable value="#[error.description]" doc:name="Error Description"
+					doc:id="d792db65-c7fc-4bbb-abb6-5b0d3663bfb5" variableName="errorDescription" />
+				<flow-ref doc:name="corporate-okta-everbridge-controlm-batchErrorStatus"
+					doc:id="1fadde29-5800-4d44-966e-de9e6f622e42" name="corporate-okta-everbridge-controlm-batchErrorStatus" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<sub-flow name="corporate-okta-everbridge-getRecordType"
+		doc:id="e7fe185f-1a75-4a4e-b5dd-e534c96bcb3f">
+		<http:request method="GET" doc:name="GET RecordTypes"
+			doc:id="edc83bdc-6600-4e70-a3a1-c44b9f662b7a"
+			path="${secure::eai.sapi.repo.name}/${secure::everbridge.sapi.path}/recordTypes"
+			outputMimeType="application/json" config-ref="everbridge_sapi_HTTPS_Request_configuration">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json",
+	"client_id" : p('secure::everbridge.sapi.client.id'),
+	"client_secret" : p('secure::everbridge.sapi.client.secret'),
+	"organizationId" : p('secure::everbridge.org.id')
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Set RecordType ID Variable"
+			doc:id="7d31e8cf-f2a4-4ddb-adf7-781af8356e86">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="recordTypeVar"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "API_Upload"))."id"[0]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="corporate-okta-everbridge-getContactPath"
+		doc:id="1f4c6d9e-4944-485d-b775-0b670060c936">
+		<http:request method="GET" doc:name="GET ContactPaths"
+			doc:id="b76603c5-436d-4a85-8aa6-1ae32929cbee"
+			path="${secure::eai.sapi.repo.name}/${secure::everbridge.sapi.path}/contactPaths"
+			outputMimeType="application/json" config-ref="everbridge_sapi_HTTPS_Request_configuration">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json",
+	"client_id" : p('secure::everbridge.sapi.client.id'),
+	"client_secret" : p('secure::everbridge.sapi.client.secret'),
+	"organizationId" : p('secure::everbridge.org.id')
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Set ContactPath ID Variables"
+			doc:id="618a7c5d-c13b-43f9-9cb9-2f67df362a36">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="SMS1Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."sysPrompt" == "SMS 1"))."pathId"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="phone1Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."sysPrompt" == "Phone 1"))."pathId"[0]
+]]></ee:set-variable>
+				<ee:set-variable variableName="email1Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."sysPrompt" == "E-Mail Address 1"))."pathId"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="mobile5Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."sysPrompt" == "Phone 5"))."pathId"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="phone4Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."sysPrompt" == "Phone 4"))."pathId"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="phone2Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."sysPrompt" == "Phone 2"))."pathId"[0]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="corporate-okta-everbridge-getContactAttributes"
+		doc:id="697d8325-42a1-41e5-804e-0b5ffab6fb6f">
+		<http:request method="GET" doc:name="GET ContactAttributes"
+			doc:id="fd8af3d8-b8f8-4a90-8928-fc46c1c65b30"
+			path="${secure::eai.sapi.repo.name}/${secure::everbridge.sapi.path}/contactAttributes"
+			outputMimeType="application/json" config-ref="everbridge_sapi_HTTPS_Request_configuration">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json",
+	"client_id" : p('secure::everbridge.sapi.client.id'),
+	"client_secret" : p('secure::everbridge.sapi.client.secret'),
+	"organizationId" : p('secure::everbridge.org.id')
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Set ContactAttributes ID Variables"
+			doc:id="cdb17199-2360-4ced-811d-cfd61afe22c8">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="employeeIDVar"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Employee ID"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="sbuNameVar"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "SBU Name"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="lineOfBusinessVar"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Line of Business"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="orgLevel2Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Org Level 2"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="orgLevel3Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Org Level 3"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="orgLevel4Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Org Level 4"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="orgLevel5Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Org Level 5"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="orgLevel6Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Org Level 6"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="workLocationVar"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Work Location"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="titleVar"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Title"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="orgLevel7Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Org Level 7"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="orgLevel8Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Org Level 8"))."id"[0]]]></ee:set-variable>
+				<ee:set-variable variableName="orgLevel1Var"><![CDATA[%dw 2.0
+output application/json
+---
+(payload."page"."data" filter ($."name" == "Company Name"))."id"[0]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="corporate-okta-everbridge-controlm-batchstatus"
+		doc:id="46db9f31-5b8b-4dec-9864-f9c71e7abd6a">
+		<ee:transform doc:name="Status"
+			doc:id="c85c7fc5-7f28-4687-a649-7276aa882ff4">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "RunId":vars.runId,
+  "JobName":vars.jobName,
+  "ApiName":vars.ApiName,
+  "Status":"Completed"
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Batch Status Request"
+			doc:id="242993d4-0f10-4bfd-bff2-99eb1dfaec95" config-ref="ControlM_HTTP_Request_configuration"
+			path="/${secure::eai.common.papi.repo.name}/${secure::batch.completeted.status}">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json",
+	"client_id" : vars.clientId,
+	"client_secret" : vars.clientSecret
+}]]]></http:headers>
+		</http:request>
+		<json-logger:logger doc:name="Logger: Job End"
+			doc:id="fd2c2a6e-0f73-44bf-becc-86566f139f18" tracePoint="END"
+			correlationId="#[if ((attributes.headers.'X-CorrelationId' == null) or (attributes.headers.'X-CorrelationId' == '')) correlationId else attributes.headers.'X-CorrelationId']"
+			config-ref="JSON_Logger_Config" message="content" />
+	</sub-flow>
+	<sub-flow name="corporate-okta-everbridge-controlm-batchErrorStatus"
+		doc:id="81c733e9-b197-4c21-987f-81d72d8562de">
+		<ee:transform doc:name="Status"
+			doc:id="97d323bd-eacb-416a-8d0c-6a49e4fd9036">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "RunId": vars.runId,
+  "JobName": vars.jobName,
+  "ErrorType": vars.errorType,
+  "ErrorDescription": vars.errorDescription,
+  "Status": "Error"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Error Status Request"
+			doc:id="8dfcd82d-b841-4e4f-a651-c7730d0c76dc" config-ref="ControlM_HTTP_Request_configuration"
+			path="/${secure::eai.common.papi.repo.name}/${secure::batch.error.status}" />
+		<json-logger:logger doc:name="Logger: ControlM Error Status"
+			doc:id="67dbbe43-1bb1-4db4-a944-c2fffeb53657" config-ref="JSON_Logger_Config"
+			message="content"
+			correlationId="#[if ((attributes.headers.'X-CorrelationId' == null) or (attributes.headers.'X-CorrelationId' == '')) correlationId else attributes.headers.'X-CorrelationId']"
+			priority="ERROR" tracePoint="EXCEPTION" />
+	</sub-flow>
+</mule>

@@ -1,0 +1,97 @@
+[{
+        "id": "00u5v212mjZO3LCqc0h7",
+        "status": "ACTIVE",
+        "created": "2016-02-18T20:28:45.000Z",
+        "activated": "2016-02-18T20:28:46.000Z",
+        "statusChanged": "2016-02-18T20:28:46.000Z",
+        "lastLogin": null,
+        "lastUpdated": "2019-01-01T07:07:23.000Z",
+        "passwordChanged": null,
+        "profile": {
+            "lastName": "Young",
+            "txtmsgmobile": "918-629-6474",
+            "city": "BARTLESVILLE",
+            "SBUName": "Enterprise Resource Planning",
+            "orgLvl6Desc": "ERP TAX",
+            "login": "Sara.R.Young@p66.com",
+            "orgLvl2Desc": "FINANCE",
+            "employeeNumber": "00137076",
+            "workState": "Oklahoma",
+            "email": "Sara.R.Young@p66.com",
+            "orgLvl3Desc": "TREASURY",
+            "orgLvl4Desc": "ERP DESIGN & TEST",
+            "st": "OK",
+            "c": "US",
+            "secondEmail": null,
+            "co": "UNITED STATES",
+            "samaccountname": "fultzsr",
+            "firstName": "Sara",
+            "primaryPhone": "+1 918-977-5884",
+            "postalAddress": "74004",
+            "mobilePhone": null,
+            "orgLvl1Desc": "PHILLIPS 66",
+            "location": "BARTLESVILLE",
+            "userType": "E",
+            "orgLvl5Desc": "ERP RECORD TO REPORT"
+        },
+        "credentials": {
+            "provider": {
+                "type": "ACTIVE_DIRECTORY",
+                "name": "phillips66.net"
+            }
+        },
+        "_links": {
+            "self": {
+                "href": "https://p66.oktapreview.com/api/v1/users/00u5v212mjZO3LCqc0h7"
+            }
+        }
+    },
+    {
+        "id": "00u5v212myMPhDiMQ0h7",
+        "status": "ACTIVE",
+        "created": "2016-02-18T20:28:47.000Z",
+        "activated": "2016-02-18T20:28:47.000Z",
+        "statusChanged": "2016-02-18T20:28:47.000Z",
+        "lastLogin": null,
+        "lastUpdated": "2019-01-01T07:07:28.000Z",
+        "passwordChanged": null,
+        "profile": {
+            "lastName": "Royer",
+            "txtmsgmobile": "918-327-1275",
+            "city": "BARTLESVILLE",
+            "SBUName": "Finance",
+            "orgLvl6Desc": "VENDOR RELATIONS & EPAYABLES",
+            "login": "Tyler.L.Royer@p66.com",
+            "orgLvl2Desc": "FINANCE",
+            "employeeNumber": "00136104",
+            "workState": "Oklahoma",
+            "email": "Tyler.L.Royer@p66.com",
+            "orgLvl3Desc": "CONTROLLER",
+            "orgLvl4Desc": "REFINING & MIDSTREAM FINANCIAL SERVICES",
+            "st": "OK",
+            "c": "US",
+            "secondEmail": null,
+            "co": "UNITED STATES",
+            "samaccountname": "royert",
+            "firstName": "Tyler",
+            "primaryPhone": "+1-918-977-5493",
+            "postalAddress": "74005",
+            "mobilePhone": null,
+            "streetAddress": "411 S Keeler",
+            "orgLvl1Desc": "PHILLIPS 66",
+            "location": "BARTLESVILLE",
+            "userType": "E",
+            "orgLvl5Desc": "TREASURY SERVICES"
+        },
+        "credentials": {
+            "provider": {
+                "type": "ACTIVE_DIRECTORY",
+                "name": "phillips66.net"
+            }
+        },
+        "_links": {
+            "self": {
+                "href": "https://p66.oktapreview.com/api/v1/users/00u5v212myMPhDiMQ0h7"
+            }
+        }
+    }]

@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:inf-core="http://www.mulesoft.org/schema/mule/inf-core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/inf-core http://www.mulesoft.org/schema/mule/inf-core/current/mule-inf-core.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="onguard-prometheus-papi-implFlow-scheduler" doc:id="44b50c5b-785a-4025-bd8f-012ceb4c82a6" >
+		<set-payload value='#[{
+
+	"RunId": "RunId",
+
+	"ApiName":"lenel-mci-papi",
+	"JobName": "processAllRefineries",
+	"OrderId": "Scheduledhourly24hrs"
+}]' doc:name="Set Payload" doc:id="33f61f50-dc3e-425e-9beb-7315c247f898" />
+		<flow-ref doc:name="onguard-prometheus-papi-implFlow" doc:id="1ab66833-5f9a-411c-82b7-0cae578705b1" name="onguard-prometheus-papi-implFlow"/>
+	</flow>
+	<flow name="onguard-prometheus-papi-implFlow" doc:id="c1edbe75-6f9b-421f-be93-4334009001cf" >
+		<ee:transform doc:name="Set ControlM Variables" doc:id="1906990d-97cd-4ad5-9694-6323e0d25512" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="currentTime" ><![CDATA[%dw 2.0
+output application/java
+---
+now() >> "CST"]]></ee:set-variable>
+				<ee:set-variable variableName="jobName" ><![CDATA[%dw 2.0
+output application/java
+---
+if(payload.JobName?) payload.JobName else null]]></ee:set-variable>
+				<ee:set-variable variableName="runId" ><![CDATA[%dw 2.0
+output application/java
+---
+if(payload.RunId?) payload.RunId  else uuid()]]></ee:set-variable>
+				<ee:set-variable variableName="ApiName" ><![CDATA[%dw 2.0
+output application/java
+---
+if(payload.ApiName?) payload.ApiName else null]]></ee:set-variable>
+				<ee:set-variable variableName="clientId" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes.headers.'client_id']]></ee:set-variable>
+				<ee:set-variable variableName="client_secret" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes.headers.'client_secret']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<inf-core:custom-logger doc:name="Start" doc:id="0fe92d5c-2178-4851-bd78-558b2ef7ab3a" config-ref="P66_Core_Config" message='#["****lenel-mciFlow**** Started processing at" ++ now()]' />
+		<try doc:name="Try" doc:id="ab6d10b9-eb2c-4915-8425-3a2b8d298348" >
+			<ee:transform doc:name="set Query" doc:id="3080ea8d-3cbe-4634-817f-69ddb1329c44" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "host": p('secure::prometheus.dbHost'),
+  "port":  p('secure::mci.dbPort'),
+  "database":  p('secure::mci.database'),
+  "userName":  p('secure::mci.dbUserName'),
+  "password":  p('secure::mci.dbPassword'),
+  "query": "SELECT * FROM " ++ p('secure::prometheus.dbquery') ++ " where environment ='" ++ p('env.name') ++ "'"
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="emailvars" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"sitename" : vars.refinery_config.name,
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<inf-core:custom-logger doc:name="prior SQL call" doc:id="977456a7-9eb9-4e68-b1b6-5833f2b6b21c" config-ref="P66_Core_Config" message='#["Started processing MS-SQL to load Repositories"]' tracePoint="BEFORE_REQUEST" />
+			 <http:request method="POST" doc:name="MS SQL-SAPI" doc:id="628f1d83-436a-4d6a-94ca-7832e9bb0e93" config-ref="HTTP_Request_configuration_MSSQL" path="/select" responseTimeout="900000" />
+			<inf-core:custom-logger doc:name="After Request" doc:id="f16da2eb-8fba-4565-b427-e987e0caa2b2" config-ref="P66_Core_Config" message='#["MS SQL **GatewaySecurity-ECM-Mule** -  SAPI call  success!"]' tracePoint="AFTER_REQUEST" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="7c95ca5f-85cf-4fb0-9d0f-0ddc8c09c6fc" >
+					<http:request method="POST" doc:name="Send Email" doc:id="9f6ad4ee-4760-424b-a49c-2e1ad81dfe0b" config-ref="HTTP_Request_configuration-email" path="/send-template">
+						<http:body ><![CDATA[#[%dw 2.0 output application/json --- { "htmlTemplate": "<!DOCTYPE html> <html> <head> <table style=\"background-color: #2c414d;\"> <tbody> <tr> <td style=\"width: 100%;\"> <h2 style=\"text-align: left; text-indent: 30px;font-family:'Franklin Gothic Medium',Arial,sans-serif; font-size:30pt;color:#fff;\">IT Notification</h2> <h4 style=\"text-align: left; text-indent: 30px;font-family:'Franklin Gothic Medium',Arial,sans-serif; font-size:15pt;color:#fff;\">Integration Services - MuleSoft</h4> </td> <td></td> <td style=\"text-align: right; padding-right: 20px;\" ><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Phillips_66_logo.svg/150px-Phillips_66_logo.svg.png\" alt=\"P66Logo\" width=\"80\" height=\"80\"/></td> </tr> <tr></tr> </tbody> </table> <table style=\"background-color: #e10000;width: 100%;\"> <tr> <td></td> </tr> </table> </head> <body> <hr /> <div id=\"body\"> <table style=\"width: 100%; height: 10%; float: left; border: 1px solid black;\"> <tbody> <tr> <td> <div style=\"height: 5%;\"><h3 style=\"text-align: center; text-decoration: underline; font-weight: bold;\">OnGuard to Prometheus notification on MS-SQL SAPI call:</h3> </div> </td></tr></tbody></table> <div id=\"innerbody\" style=\"height: 50%; width: 100%; text-align: left;\"> <div style=\"height: 50%; width: 100%;\"> <table style=\"width: 100%; height: 10%; float: left; border: 1px solid black;\"> <tbody> <tr> <td><strong>Environment </strong></td> <td style=\"width: 80%; height: 80%;\"> \" " ++ p('env.name') ++ " \" </td> </tr> <tr> <td><strong>Time Issue Occured :</strong></td> <td style=\"width: 80%; height: 80%;\"> " ++ now() ++ " </td> </tr> <tr> <td><strong>ErrorMessage :</strong></td> <td style=\"width: 80%; height: 80%;\"> " ++ error.description ++ " </td> </tr> <tr> <td><strong>Connecting :</strong></td> <td style=\"width: 80%; height: 80%;\"> \" "++ p('secure::mssql.sapi.basepath') ++ " \"</td> </tr> <tr> <td><strong>User :</strong></td> <td style=\"width: 80%; height: 80%;\">\" "++ p('secure::mci.dbUserName') ++ " \"</td> </tr> </tbody> </table> <hr /> <div style=\"height: 5%;\"><h5 style=\"text-align: center;\">DO NOT REPLY TO THIS NOTICE. In case of questions, contact Enterprise Management System Production Support via the Helpdesk</h5></div> </div> </div> </div> </body> </html>",
+"subject":	"Alert for onGuard to Prometheus - " ++ "${env.name}",
+  "emailRecipients": p('secure::prometheus.email.recipients'),
+  "attachment": ""
+}]]]></http:body>
+<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_id" : "${secure::lenel.email.username}",
+	"client_secret" : "${secure::lenel.email.pwd}",
+	"Content-type" : "${secure::email.contenttype}"
+}]]]></http:headers>
+						
+					</http:request>
+					<inf-core:custom-logger doc:name="After Email sent" doc:id="56ea04d6-8e29-46ce-9d61-5b3d6e4860e0" config-ref="P66_Core_Config" message='#["Email sent success! for "]' tracePoint="AFTER_REQUEST" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="RefineryCollection" doc:id="b7d5cc70-b8ca-46a1-85f2-0928a02afd2d">
+				<ee:message />
+				<ee:variables>
+					<ee:set-variable variableName="refinery"><![CDATA[%dw 2.0
+import * from dw::core::Binaries
+output application/json
+---
+payload map {
+"name" : $.refinery_name,
+  "dbHost": $.mssql_host,
+  "dbPort":  $.mssql_port,
+  "database":  $.mssql_database,
+  "dbUserName":  $.mssql_username,
+  "dbPassword":  fromBase64($.mssql_password),
+  "query": $.mssql_query,
+  "sftpQaHost" : $.sftp_qa_host,
+  "sftpProdHost" : $.sftp_prod_host,
+  "sftpPort" : $.sftp_port,
+  "filename" : $.sftp_filename,
+  "contentType" : $.sftp_contenttype,
+  "plant_desc": $.plant_desc,
+  "plant_Code": $.plant_Code,
+  "site_id": $.site_id
+  }]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		<foreach doc:name="For Each" doc:id="538c970e-17a3-4e33-a451-1f63f8823234" collection="vars.refinery">
+			<ee:transform doc:name="Set Refinery_config" doc:id="6d91fed4-b5a6-4924-ab8f-d4c0c8811485" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="refinery_config" ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<!-- <flow-ref doc:name="watermark-objectStoreFlow-prometheus" doc:id="14a55a1c-d6a3-43d1-b589-d6e3c79c7279" name="watermark-objectStoreFlow-prometheus" />
+			 --><try doc:name="Try" doc:id="63997adc-4fd3-4b45-82f8-69462ace6190" >
+				<ee:transform doc:name="set Query" doc:id="adb07495-90cc-4298-ab7d-9a5d6a5c23b1" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "host": vars.refinery_config.dbHost,
+  "port":  vars.refinery_config.dbPort,
+  "database":  vars.refinery_config.database,
+  "userName":  vars.refinery_config.dbUserName,
+  "password":  vars.refinery_config.dbPassword,
+  "query": " SELECT  [ID],[SITE],[COMPANYNAME],[LASTNAME],[FIRSTNAME],[MIDNAME],[BADGEID],[EMPID],[PERSONNELTYPE],[BADGESTATUS],[BADGESTATUSNAME],[PERSONNELTYPENAME] FROM " ++ vars.refinery_config.query ++ "with (nolock) where site = '" ++  vars.refinery_config.plant_Code ++ "'"
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="emailvars" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"sitename" : vars.refinery_config.name,
+	"thresthold" : "0000",
+	"downtime" : "0000"
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<inf-core:custom-logger doc:name="Prior SQL" doc:id="47ae0d6c-b254-48ab-8da9-ad55f5e206ea" config-ref="P66_Core_Config" message='#["Started processing " ++ vars.refinery_config.name]' tracePoint="BEFORE_REQUEST" />
+				<http:request method="POST" doc:name="MS SQL-SAPI" doc:id="27fef94d-56f3-4f83-bd0f-add79ace8cd4" config-ref="HTTP_Request_configuration_MSSQL" path="/select" responseTimeout="900000" />
+				<inf-core:custom-logger doc:name="after SQL request" doc:id="f62b77bf-5919-46fa-90d8-eb4cde241a1f" config-ref="P66_Core_Config" message='#["MS SQL -  SAPI call  success! for" ++ vars.refinery_config.name ++ "for Time Frame between "  ++ now()]' tracePoint="AFTER_REQUEST" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="ddbedee1-7a3c-4d17-b731-7f8cf1aab096" >
+						<http:request method="POST" doc:name="Send Email" doc:id="78c0b349-39a3-4643-ad45-35767a4025d4" config-ref="HTTP_Request_configuration-email" path="/send-template">
+							<http:body><![CDATA[#[%dw 2.0 output application/json --- { "htmlTemplate": "<!DOCTYPE html> <html> <head> <table style=\"background-color: #2c414d;\"> <tbody> <tr> <td style=\"width: 100%;\"> <h2 style=\"text-align: left; text-indent: 30px;font-family:'Franklin Gothic Medium',Arial,sans-serif; font-size:30pt;color:#fff;\">IT Notification</h2> <h4 style=\"text-align: left; text-indent: 30px;font-family:'Franklin Gothic Medium',Arial,sans-serif; font-size:15pt;color:#fff;\">Integration Services - MuleSoft</h4> </td> <td></td> <td style=\"text-align: right; padding-right: 20px;\" ><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Phillips_66_logo.svg/150px-Phillips_66_logo.svg.png\" alt=\"P66Logo\" width=\"80\" height=\"80\"/></td> </tr> <tr></tr> </tbody> </table> <table style=\"background-color: #e10000;width: 100%;\"> <tr> <td></td> </tr> </table> </head> <body> <hr /> <div id=\"body\"> <table style=\"width: 100%; height: 10%; float: left; border: 1px solid black;\"> <tbody> <tr> <td> <div style=\"height: 5%;\"><h3 style=\"text-align: center; text-decoration: underline; font-weight: bold;\">OnGuard to Prometheus notification on MS-SQL SAPI call:</h3> </div> </td></tr></tbody></table> <div id=\"innerbody\" style=\"height: 50%; width: 100%; text-align: left;\"> <div style=\"height: 50%; width: 100%;\"> <table style=\"width: 100%; height: 10%; float: left; border: 1px solid black;\"> <tbody> <tr> <td><strong>Environment </strong></td> <td style=\"width: 80%; height: 80%;\"> \" " ++ p('env.name') ++ " \" </td> </tr> <tr> <td><strong>Time Issue Occured :</strong></td> <td style=\"width: 80%; height: 80%;\"> " ++ now() ++ " </td> </tr> <tr> <td><strong>ErrorMessage :</strong></td> <td style=\"width: 80%; height: 80%;\"> " ++ error.description ++ " </td> </tr> <tr> <td><strong>Connecting :</strong></td> <td style=\"width: 80%; height: 80%;\"> \" "++ p('secure::mssql.sapi.basepath') ++ " \"</td> </tr> <tr> <td><strong>User :</strong></td> <td style=\"width: 80%; height: 80%;\">\" "++ p('secure::mci.dbUserName') ++ " \"</td> </tr> <tr> <td><strong>Refinery :</strong></td> <td style=\"width: 80%; height: 80%;\">\" "++ vars.refinery_config.plant_desc ++ " \"</td> </tr> </tbody> </table> <hr /> <div style=\"height: 5%;\"><h5 style=\"text-align: center;\">DO NOT REPLY TO THIS NOTICE. In case of questions, contact Enterprise Management System Production Support via the Helpdesk</h5></div> </div> </div> </div> </body> </html>",
+"subject":	"Alert for onGuard to Prometheus - " ++ "${env.name}",
+  "emailRecipients": p('secure::prometheus.email.recipients'),
+  "attachment": ""
+}]]]></http:body>
+<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_id" : "${secure::lenel.email.username}",
+	"client_secret" : "${secure::lenel.email.pwd}",
+	"Content-type" : "${secure::email.contenttype}"
+}]]]></http:headers>
+						</http:request>
+						<inf-core:custom-logger doc:name="after Email" doc:id="00796736-1343-4143-9c77-8116c27815b3" config-ref="P66_Core_Config" message="Email sent success!" tracePoint="AFTER_REQUEST" />
+						<set-payload value="#[null]" doc:name="Set null" doc:id="6ab959d7-3536-4102-acca-a50a5de8825c" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+			<choice doc:name="Choice" doc:id="63ed8a6e-d0c1-4a1e-92bb-21dbea666225" >
+				<when expression="#[payload == null]" >
+					<inf-core:custom-logger doc:name="No Payload" doc:id="b0d87dda-761c-4a48-9627-ff1ad514dae4" config-ref="P66_Core_Config" message='#["Error on connection"]' tracePoint="EXCEPTION" />
+				</when>
+				<when expression="#[payload != []]" >
+					<ee:transform doc:name="toJSON" doc:id="bc621643-4cbf-4327-b02d-03f3f416775c">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<ee:transform doc:name="Json to XML" doc:id="2016e438-df50-4b49-ae5b-60917d13d7d9">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output text/xml encoding = "UTF-8"
+ns ns0 http://schemas.xmlsoap.org/soap/envelope/
+ns ns01 http://www.SageTechnology.com.au/
+---
+{
+	ns0#Envelope: {
+		ns0#Header: null,
+		ns0#Body: {
+			ns01#RestoreBadgeRecords: {
+				ns01#sdoAuthObject: {
+					ns01#AuthKey: "6014CCB3-A7FA-4ACD-9AE6-2A735A1628F8",
+					ns01#UserName: "Integrator"
+				},
+				ns01#badgeData: {
+					ns01#Badges: {
+						(payload map ( payload01 , indexOfPayload01 ) -> {
+							ns01#Badge: {
+								ns01#BadgeID: payload01.BADGEID,
+								ns01#EmployeeID: payload01.EMPID,
+								ns01#SiteID: vars.refinery_config.site_id,
+								ns01#FirstName: payload01.FIRSTNAME,
+								ns01#LastName: payload01.LASTNAME,
+								ns01#PersonnelType: payload01.PERSONNELTYPE as String,
+								ns01#Company: payload01.COMPANYNAME
+							}
+						})
+					}
+				}
+			}
+		}
+	}
+}]]></ee:set-payload>
+						</ee:message>
+						<ee:variables >
+						</ee:variables>
+					</ee:transform>
+					<set-variable value="#[payload]" doc:name="sftp_data" doc:id="be1afbb2-fc4b-4b52-9427-63b5d69f9115" variableName="sftp_data" mimeType="text/plain" />
+					<inf-core:custom-logger doc:name="Custom logger" doc:id="88c7e3fc-0cd5-48c3-a8cd-26afb38143fa" config-ref="P66_Core_Config" message='#["Before Posting file to SFTP for refinery --- " ++ vars.refinery_config.name]' tracePoint="BEFORE_TRANSFORM" />
+					<ee:transform doc:name="set Env_names" doc:id="3a520e37-b17c-4bc2-808d-d9e996164392" >
+						<ee:message />
+						<ee:variables >
+							<ee:set-variable variableName="env_names" ><![CDATA[%dw 2.0 
+output application/java
+--- 
+[
+	if (isEmpty(vars.refinery_config.sftpQaHost)) null else {"env_name":vars.refinery_config.sftpQaHost},
+	if (isEmpty(vars.refinery_config.sftpProdHost)) null else {"env_name": vars.refinery_config.sftpProdHost }
+]]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					<foreach doc:name="For Each" doc:id="eaaca164-cc66-4cf2-b3fb-3a2904e93646" collection="vars.env_names" >
+						<choice doc:name="Choice" doc:id="e18ef981-5017-4456-9642-6c5040052e90" >
+							<when expression="#[payload != null]" >
+								<try doc:name="Try" doc:id="e8681ea3-4eb0-401b-91e3-f7b69eafd24c" >
+									<set-variable value="#[payload]" doc:name="Set Variable" doc:id="861f7a7b-2f31-495e-a25e-fefc03782de4" variableName="soap_host" mimeType="application/java" />
+									<set-payload value="#[vars.sftp_data]" doc:name="Set Payload" doc:id="20645fdd-8639-45f8-9c41-ba8d74e0d13c" mimeType="text/xml" />
+									<http:request method="POST" doc:name="Call prometheus" doc:id="703fd8b6-5285-495f-93aa-06c94ffea1db" path="${secure::prometheus.path}" config-ref="HTTP_Request_configuration_prometheus"/>
+									<inf-core:custom-logger doc:name="After SFTP" doc:id="495f26e0-631e-4ad4-b660-01c0ea440ee8" config-ref="P66_Core_Config" message='#["Success! Posting file to SFTP for refinery --- "]' tracePoint="AFTER_REQUEST" payload='#[write(payload, "application/json")]'/>
+									<error-handler >
+										<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="7b3bc16b-174d-4da9-9f89-92188d64f9f1" >
+											<http:request method="POST" doc:name="Send Email" doc:id="05bf758f-43d5-497a-be2d-606548fe2bed" config-ref="HTTP_Request_configuration-email" path="/send-template">
+												<http:body><![CDATA[#[%dw 2.0 output application/json --- { "htmlTemplate": "<!DOCTYPE html> <html> <head> <table style=\"background-color: #2c414d;\"> <tbody> <tr> <td style=\"width: 100%;\"> <h2 style=\"text-align: left; text-indent: 30px;font-family:'Franklin Gothic Medium',Arial,sans-serif; font-size:30pt;color:#fff;\">IT Notification</h2> <h4 style=\"text-align: left; text-indent: 30px;font-family:'Franklin Gothic Medium',Arial,sans-serif; font-size:15pt;color:#fff;\">Integration Services - MuleSoft</h4> </td> <td></td> <td style=\"text-align: right; padding-right: 20px;\" ><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Phillips_66_logo.svg/150px-Phillips_66_logo.svg.png\" alt=\"P66Logo\" width=\"80\" height=\"80\"/></td> </tr> <tr></tr> </tbody> </table> <table style=\"background-color: #e10000;width: 100%;\"> <tr> <td></td> </tr> </table> </head> <body> <hr /> <div id=\"body\"> <table style=\"width: 100%; height: 10%; float: left; border: 1px solid black;\"> <tbody> <tr> <td> <div style=\"height: 5%;\"><h3 style=\"text-align: center; text-decoration: underline; font-weight: bold;\">OnGuard to Prometheus notification on Prometheus call:</h3> </div> </td></tr></tbody></table> <div id=\"innerbody\" style=\"height: 50%; width: 100%; text-align: left;\"> <div style=\"height: 50%; width: 100%;\"> <table style=\"width: 100%; height: 10%; float: left; border: 1px solid black;\"> <tbody> <tr> <td><strong>Environment </strong></td> <td style=\"width: 80%; height: 80%;\"> \" " ++ p('env.name') ++ " \" </td> </tr> <tr> <td><strong>Time Issue Occured :</strong></td> <td style=\"width: 80%; height: 80%;\"> " ++ now() ++ " </td> </tr> <tr> <td><strong>ErrorMessage :</strong></td> <td style=\"width: 80%; height: 80%;\"> " ++ error.description ++ " </td> </tr> <tr> <td><strong>Connecting :</strong></td> <td style=\"width: 80%; height: 80%;\"> \" "++ p('secure::prometheus.path') ++ " \"</td> </tr> <tr> <td><strong>Host :</strong></td> <td style=\"width: 80%; height: 80%;\">\" "++ p('secure::prometheus.host') ++ " \"</td> </tr> <tr> <td><strong>Refinery :</strong></td> <td style=\"width: 80%; height: 80%;\">\" " ++ vars.refinery_config.plant_desc ++ " \"</td> </tr> </tbody> </table> <hr /> <div style=\"height: 5%;\"><h5 style=\"text-align: center;\">DO NOT REPLY TO THIS NOTICE. In case of questions, contact Enterprise Management System Production Support via the Helpdesk</h5></div> </div> </div> </div> </body> </html>",
+"subject":	"Alert for onGuard to Prometheus - " ++ "${env.name}",
+  "emailRecipients": p('secure::prometheus.email.recipients')
+}]]]></http:body>
+<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_id" : "${secure::lenel.email.username}",
+	"client_secret" : "${secure::lenel.email.pwd}",
+	"Content-type" : "${secure::email.contenttype}"
+}]]]></http:headers>
+											</http:request>
+											<inf-core:custom-logger doc:name="email success!" doc:id="edb9f607-463c-4e48-b39c-6f9cee59b0de" config-ref="P66_Core_Config" message='#["Email sent success! for " ++ vars.refinery_config.name]' tracePoint="AFTER_REQUEST" />
+										</on-error-continue>
+									</error-handler>
+								</try>
+							</when>
+							<otherwise >
+								<inf-core:custom-logger doc:name="No Env Found" doc:id="c228ce63-64c7-4ff0-b3f2-7db7cab4e2aa" config-ref="P66_Core_Config" message='#["No Environment property available for " ++ vars.refinery_config.name]' tracePoint="EXCEPTION" />
+							</otherwise>
+						</choice>
+					</foreach>
+				</when>
+				<otherwise >
+					<inf-core:custom-logger doc:name="Custom logger" doc:id="170dd315-2d3a-4c3c-a6c5-45a322253d2b" config-ref="P66_Core_Config" message='#["Email Sent Successfully for :" ++  vars.refinery_config.name]' tracePoint="AFTER_REQUEST" />
+				</otherwise>
+			</choice>
+			<remove-variable doc:name="Remove Variable" doc:id="9b1f54e3-64b9-4587-b39f-c14043f38785" variableName="sftp_host" />
+		</foreach>
+		<inf-core:custom-logger doc:name="Success Processing" doc:id="c32ad0d3-3ec6-483c-b150-e0a1a167ea47" config-ref="P66_Core_Config" message='#["COMPLTED Processing --- "]' tracePoint="END" />
+		<!-- <os:store doc:name="Store-lastrunTime" doc:id="4dfdc5ff-597f-45e6-bf64-f35e452f0d8e" key="lastrunTime" objectStore="Object_store_prometheus">
+				<os:value><![CDATA[#[vars.endDate]]]></os:value>
+			</os:store> -->
+		<flow-ref doc:name="batchstatusFlow" doc:id="8e0d69f1-9222-4573-8680-bf32c475ac54" name="batchstatusFlow-prometheus" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9620a9b2-a10c-4832-bd96-22c3845c3dc6" >
+				<flow-ref doc:name="batcherrorstatusFlow" doc:id="812c6024-565e-4934-a5fb-5047b5856019" name="batcherrorstatusFlow-prometheus" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+<flow name="batchstatusFlow-prometheus" doc:id="641b0bbe-62f2-4a3b-bec9-35c6e879fd24" >
+		<ee:transform doc:name="Status" doc:id="f64c3823-0b49-45c7-b851-23abdb4455b4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "RunId":vars.runId,
+  "JobName":vars.jobName,
+  "ApiName":vars.ApiName,
+  "Status":"Completed"
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<inf-core:custom-logger doc:name="Custom logger" doc:id="8e6b03e1-9392-449b-b101-8c3d80cbd79a" message='#["Success processing all refineries!"]' config-ref="P66_Core_Config"/>
+		<http:request method="POST" doc:name="Batch Status Request" doc:id="4111afd5-aa85-40d6-8c57-7984d99ee398" path="/${secure::eai.common.papi.repo.name}/${secure::batch.completed.status}" config-ref="ControlM_HTTP_Request_configuration">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json",
+	"client_id" : vars.clientId,
+	"client_secret" : vars.clientSecret
+}]]]></http:headers>
+		</http:request>
+	</flow>
+	<flow name="batcherrorstatusFlow-prometheus" doc:id="a6aefdc0-81eb-438c-b569-35ab8ef5943b" >
+		<ee:transform doc:name="Status" doc:id="84775a08-2627-4456-865a-e578802af679" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "RunId":vars.runId,
+  "JobName":vars.jobName,
+  "ApiName":vars.ApiName,
+  "Status":"Failed"
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<inf-core:custom-logger doc:name="Custom logger" doc:id="4ee443e7-6dfa-4dd4-aa10-e33b092c61f8" message='#["Error in Transaction"]' tracePoint="BEFORE_REQUEST" config-ref="P66_Core_Config"/>
+		<http:request method="POST" doc:name="Error Status Request" doc:id="5cc6672b-0dc9-4667-9041-b28f3426748f" config-ref="ControlM_HTTP_Request_configuration" path="/${secure::eai.common.papi.repo.name}/${secure::batch.error.status}" />
+	</flow>
+</mule>

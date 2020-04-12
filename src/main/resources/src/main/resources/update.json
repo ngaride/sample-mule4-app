@@ -1,0 +1,50 @@
+{
+  "id": "00u5v240m9dww4SJp0h7",
+  "status": "ACTIVE",
+  "created": "2016-02-18T20:31:51.000Z",
+  "activated": "2016-02-18T20:31:51.000Z",
+  "statusChanged": "2016-02-18T20:31:51.000Z",
+  "lastLogin": null,
+  "lastUpdated": "2019-02-25T15:36:20.000Z",
+  "passwordChanged": null,
+  "profile": {
+    "lastName": "Pollock",
+    "zipCode": "74003-6670",
+    "txtmsgmobile": "(918) 332-8761",
+    "city": "BARTLESVILLE WEST",
+    "SBUName": "Technology",
+    "title": "Senior Scientist",
+    "login": "Bryant.B.Pollock@p66.com",
+    "orgLvl2Desc": "TECHNOLOGY",
+    "employeeNumber": "00163455",
+    "workState": "Oklahoma",
+    "LineOfBusinessName": "CORPORATE",
+    "email": "Bryant.B.Pollock@p66.com",
+    "orgLvl3Desc": "SUSTAINABILITY TECHNOLOGY",
+    "st": "OK",
+    "c": "US",
+    "physicalDeliveryOfficeName": "CPL-02-208",
+    "secondEmail": null,
+    "co": "UNITED STATES",
+    "samaccountname": "pollojb",
+    "firstName": "Bryant",
+    "primaryPhone": "+1 918-977-4811",
+    "postalAddress": "74003-6670",
+    "mobilePhone": "(918) 332-8761",
+    "streetAddress": "Highway 60 and 123\nPRC CPL 215\n",
+    "orgLvl1Desc": "PHILLIPS 66",
+    "location": "BARTLESVILLE WEST",
+    "userType": "E"
+  },
+  "credentials": {
+    "provider": {
+      "type": "ACTIVE_DIRECTORY",
+      "name": "phillips66.net"
+    }
+  },
+  "_links": {
+    "self": {
+      "href": "https://p66.oktapreview.com/api/v1/users/00u5v240m9dww4SJp0h7"
+    }
+  }
+}

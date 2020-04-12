@@ -1,0 +1,122 @@
+{
+  "status": "ACTIVE",
+  "activated": "2019-02-25T19:05:56.000Z",
+  "statusChanged": "2019-02-25T19:05:56.000Z",
+  "lastUpdated": "2019-02-25T19:05:56.000Z",
+  "everbridge": {
+    "firstName": "David",
+    "lastName": "Sutherland",
+    "externalId": "dj_suthe",
+    "recordTypeId": 305943405395978
+  },
+  "status": "ACTIVE",
+  "activated": "2019-02-25T19:05:58.000Z",
+  "statusChanged": "2019-02-25T19:05:58.000Z",
+  "lastUpdated": "2019-02-25T19:05:58.000Z",
+  "everbridge": {
+    "firstName": "Chase",
+    "lastName": "Dickinson",
+    "externalId": "ca_dicki",
+    "recordTypeId": 305943405395978
+  },
+  "status": "ACTIVE",
+  "activated": "2019-02-25T14:30:38.000Z",
+  "statusChanged": "2019-02-25T14:30:38.000Z",
+  "lastUpdated": "2019-02-25T14:30:38.000Z",
+  "everbridge": {
+    "firstName": "Katie",
+    "lastName": "Stark",
+    "externalId": "starkk",
+    "recordTypeId": 305943405395978
+  },
+  "status": "ACTIVE",
+  "activated": "2019-02-25T14:30:43.000Z",
+  "statusChanged": "2019-02-25T14:30:43.000Z",
+  "lastUpdated": "2019-02-25T14:30:43.000Z",
+  "everbridge": {
+    "firstName": "Michael",
+    "lastName": "Cameron",
+    "externalId": "mcamer",
+    "recordTypeId": 305943405395978
+  },
+  "status": "ACTIVE",
+  "activated": "2019-02-25T15:38:25.000Z",
+  "statusChanged": "2019-02-25T15:38:25.000Z",
+  "lastUpdated": "2019-02-25T15:38:25.000Z",
+  "everbridge": {
+    "firstName": "Elizabeth",
+    "lastName": "Arreola",
+    "externalId": "arreoe",
+    "recordTypeId": 305943405395978
+  },
+  "status": "ACTIVE",
+  "activated": "2019-02-25T15:38:27.000Z",
+  "statusChanged": "2019-02-25T15:38:27.000Z",
+  "lastUpdated": "2019-02-25T15:38:27.000Z",
+  "everbridge": {
+    "firstName": "Sonali",
+    "lastName": "Kapoor",
+    "externalId": "skapoor",
+    "recordTypeId": 305943405395978
+  },
+  "status": "ACTIVE",
+  "activated": "2019-02-25T15:38:28.000Z",
+  "statusChanged": "2019-02-25T15:38:28.000Z",
+  "lastUpdated": "2019-02-25T15:38:28.000Z",
+  "everbridge": {
+    "firstName": "Vijendra",
+    "lastName": "Kumar",
+    "externalId": "vijenk",
+    "recordTypeId": 305943405395978
+  },
+  "status": "ACTIVE",
+  "activated": "2019-02-25T15:38:30.000Z",
+  "statusChanged": "2019-02-25T15:38:30.000Z",
+  "lastUpdated": "2019-02-25T15:38:30.000Z",
+  "everbridge": {
+    "firstName": "Nitish",
+    "lastName": "Kumar",
+    "externalId": "nitishk",
+    "recordTypeId": 305943405395978
+  },
+  "status": "ACTIVE",
+  "activated": "2019-02-25T17:55:37.000Z",
+  "statusChanged": "2019-02-25T17:55:37.000Z",
+  "lastUpdated": "2019-02-25T17:55:37.000Z",
+  "everbridge": {
+    "firstName": "Will",
+    "lastName": "Gregory",
+    "externalId": "gregorw",
+    "recordTypeId": 305943405395978
+  },
+  "status": "ACTIVE",
+  "activated": "2019-02-25T17:55:38.000Z",
+  "statusChanged": "2019-02-25T17:55:38.000Z",
+  "lastUpdated": "2019-02-25T17:55:38.000Z",
+  "everbridge": {
+    "firstName": "Jeremy",
+    "lastName": "Mushill",
+    "externalId": "mushij",
+    "recordTypeId": 305943405395978
+  },
+  "status": "ACTIVE",
+  "activated": "2019-02-25T19:05:59.000Z",
+  "statusChanged": "2019-02-25T19:05:59.000Z",
+  "lastUpdated": "2019-02-25T19:05:59.000Z",
+  "everbridge": {
+    "firstName": "Shirley",
+    "lastName": "Ronnholm",
+    "externalId": "sronnho",
+    "recordTypeId": 305943405395978
+  },
+  "status": "ACTIVE",
+  "activated": "2019-02-25T19:06:01.000Z",
+  "statusChanged": "2019-02-25T19:06:01.000Z",
+  "lastUpdated": "2019-02-25T19:06:01.000Z",
+  "everbridge": {
+    "firstName": "Ajay",
+    "lastName": "Kande",
+    "externalId": "a_kande1",
+    "recordTypeId": 305943405395978
+  }
+}

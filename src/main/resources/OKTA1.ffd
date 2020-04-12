@@ -1,0 +1,5 @@
+form: FIXEDWIDTH
+id: 'OKTA1'
+name: 'OKTA1'
+values: 
+- { name: 'name', usage: M, type: String, length: 50 }

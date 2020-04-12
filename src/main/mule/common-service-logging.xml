@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+
+	<flow name="common-service-logging:audit-start" doc:id="ba13170c-f777-4b08-9a8d-0c307e99700a">
+		<logger level="INFO" doc:name="Start" doc:id="c22d68d2-a1fe-4c2a-a357-34e46a20b0ea" message="==== Starting flow #[flow.name] - correlationId: #[vars.correlationId]" />
+		<ee:transform doc:name="Set Log Entry" doc:id="bb711bdf-0fae-4da3-a487-35f439557295">
+			<ee:message>
+				<ee:set-payload resource="dwl/logging/set-audit-start-payload.dwl" />
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="e417d39d-d76d-4c65-bd36-34b3c68f802a" message="#[payload]"/>
+	
+</flow>
+
+	<flow name="common-service-logging:audit-end" doc:id="357ba045-704d-4d73-b955-77d86205bf70">
+		<logger level="INFO" doc:name="Start" doc:id="f60091cf-dd54-46d7-8e26-7ffa76eb7e70" message="==== Starting flow #[flow.name] - correlationId: #[vars.correlationId]" />
+		<ee:transform doc:name="Set Log Entry" doc:id="da59a432-e562-4199-97dd-675e81a28a5e">
+			<ee:message>
+				<ee:set-payload resource="dwl/logging/set-audit-end-payload.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="1a85369a-4d9f-4dbb-97ff-9982cbfae697" message="#[payload]"/>
+	
+</flow>
+
+	<flow name="common-service-logging:audit-ending-payload" doc:id="dbecf135-bd5d-4ff5-bb28-3e1617c5272b">
+		<logger level="INFO" doc:name="Start" doc:id="6823002d-25fc-43de-bf1c-51083c322bde" message="==== Starting flow #[flow.name] - correlationId: #[vars.correlationId]" />
+		<ee:transform doc:name="Set Log Entry" doc:id="d8f5f96a-89c7-4e19-bd55-d4bcbc983c04">
+			<ee:message>
+				<ee:set-payload resource="dwl/logging/set-audit-ending-with-payload.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="1aefadba-245f-4495-83c0-b8b30e72547a" />
+	
+</flow>
+
+	<flow name="common-service-logging:payload-capture" doc:id="87bb00d7-f743-43e9-b0d0-147838a18a31">
+		<logger level="INFO" doc:name="Start" doc:id="9186d3af-bf31-4ce8-912a-b840516c8c6e" message="==== Starting flow #[flow.name] - correlationId: #[vars.correlationId]" />
+		<ee:transform doc:name="Set Log Entry" doc:id="762293f9-3ea5-460c-a397-16af938817d6">
+			<ee:message>
+				<ee:set-payload resource="dwl/logging/set-audit-captured-payload.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="ecd8537b-f9c4-4780-920e-abb5f85aee64" message="#[payload]"/>
+	
+</flow>
+
+	<flow name="common-service-logging:audit-error" doc:id="c47c9c0d-8944-477c-8801-048db4cb6b4e">
+		<logger level="INFO" doc:name="Start" doc:id="dd9c22b6-f221-4217-bdc3-ff8f52ba4b2f" message="==== Starting flow #[flow.name] - correlationId: #[vars.correlationId]" />
+		<ee:transform doc:name="Set Log Entry" doc:id="4976cb61-3175-44be-9ba3-200f15c028b3">
+			<ee:message>
+				<ee:set-payload resource="dwl/logging/set-audit-error-payload.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="7c59ee46-ab1d-4efc-8f21-1fe25ddbeddd" />
+	
+</flow>
+</mule>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="onguard-prometheus-papi-impl-test-suite.xml" />
+	<munit:test name="onguard-prometheus-papi-impl-test-suite-onguard-prometheus-papi-implFlow-schedulerTest" description="Test" doc:id="63d0960f-b4f6-4d1a-80ca-f4136fc85a0e" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when MS SQL" doc:id="6f452d87-6dc9-4ad7-980e-d044da18b6f9" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:id" whereValue="628f1d83-436a-4d6a-94ca-7832e9bb0e93" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[[
+  {
+    "mssql_port": 1433,
+    "mssql_host": "SWEDBP117.phillips66.net",
+    "sftp_prod_host": "epas-c4nh.staging.prometheusgroup.app",
+    "refinery_code": "SWE",
+    "FutureUse1": "",
+    "sftp_username": "",
+    "environment": "dev",
+    "plant_Code": "RS01",
+    "FutureUse3": "",
+    "sftp_port": 443,
+    "FutureUse2": "",
+    "sftp_qa_host": "epas-c4nh.dev.prometheusgroup.app",
+    "sftp_cid": "",
+    "sftp_directorypath": "",
+    "mssql_database": "AccessControl",
+    "plant_desc": "Sweeny",
+    "mssql_username": "SWEECMP",
+    "mssql_query": "[AccessControl].[dbo].[BadgeInfoPrometheus_RS01]",
+    "refinery_name": "BadgeInfoPrometheus",
+    "sftp_contenttype": "text/xml",
+    "mssql_password": "azczSnZvQWk5eDgz",
+    "sftp_filename": "/webservices/integration",
+    "site_id": 5,
+    "s_num": 48
+  }
+]]' mediaType="application/java"/>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when Ms-SQL" doc:id="ec969488-e938-4173-bd4f-c08d7f8fb23a" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:id" whereValue="27fef94d-56f3-4f83-bd0f-add79ace8cd4" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[[
+  {
+    "MIDNAME": "A",
+    "BADGESTATUSNAME": "Active",
+    "ID": 57987,
+    "LASTNAME": "CURTIS",
+    "PERSONNELTYPENAME": "EMPLOYEE",
+    "BADGEID": 173300,
+    "SITE": "RS01",
+    "FIRSTNAME": "TODD",
+    "COMPANYNAME": "Phillips 66 - Refinery",
+    "BADGESTATUS": 1,
+    "EMPID": 57987,
+    "PERSONNELTYPE": 1
+  },
+  {
+    "MIDNAME": "D",
+    "BADGESTATUSNAME": "Active",
+    "ID": 58601,
+    "LASTNAME": "EVERSOLE  ",
+    "PERSONNELTYPENAME": "NEW CONTRACTOR",
+    "BADGEID": 263483,
+    "SITE": "RS01",
+    "FIRSTNAME": "CRAIG",
+    "COMPANYNAME": "The BarTech Group",
+    "BADGESTATUS": 1,
+    "EMPID": 58601,
+    "PERSONNELTYPE": 13
+  }]]' mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when SOAP call" doc:id="cd3ee63c-262b-484f-a546-213a453216ba" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:id" whereValue="703fd8b6-5285-495f-93aa-06c94ffea1db" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock ControlM" doc:id="2bdf2147-59a6-4a36-8338-e74d13f48a35" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:id" whereValue="5cc6672b-0dc9-4667-9041-b28f3426748f" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[%dw 2.0 output application/json --- [ { "unique_company_id": 0, "reader_id": "3464", "mi": " ", "unique_employee_id": 62105, "reader_description": "MUSTER-AREA-KEYPAD", "event_date_time": "2019-03-01T19:04:19", "company_name": "", "location_code": "GCF ", "last_name": "Caraballo", "event_direction": "I", "first_name": "Omar" }, { "unique_company_id": 0, "reader_id": "3464", "mi": " ", "unique_employee_id": 62105, "reader_description": "MUSTER-AREA-KEYPAD", "event_date_time": "2019-03-01T19:28:31", "company_name": "", "location_code": "GCF ", "last_name": "Caraballo", "event_direction": "I", "first_name": "Omar" } ]]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock ControlM Error" doc:id="bfd555dd-eba8-4635-8f6c-e3d5673cdbc5" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:id" whereValue="4111afd5-aa85-40d6-8c57-7984d99ee398" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[%dw 2.0 output application/json --- [ { "unique_company_id": 0, "reader_id": "3464", "mi": " ", "unique_employee_id": 62105, "reader_description": "MUSTER-AREA-KEYPAD", "event_date_time": "2019-03-01T19:04:19", "company_name": "", "location_code": "GCF ", "last_name": "Caraballo", "event_direction": "I", "first_name": "Omar" }, { "unique_company_id": 0, "reader_id": "3464", "mi": " ", "unique_employee_id": 62105, "reader_description": "MUSTER-AREA-KEYPAD", "event_date_time": "2019-03-01T19:28:31", "company_name": "", "location_code": "GCF ", "last_name": "Caraballo", "event_direction": "I", "first_name": "Omar" } ]]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock EMAIL" doc:id="0d1782ef-941e-4891-87d8-cdeeba822418" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:name" whereValue="Send Email" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to onguard-prometheus-papi-implFlow-scheduler" doc:id="ed5f49a4-1582-4529-98e9-027c9e8351d8" name="onguard-prometheus-papi-implFlow-scheduler"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="e85cd771-0a6c-4856-963c-b809cbeae770" expression="#[payload]" is="#[MunitTools::notNullValue()]" message="Payload is null!" />
+		</munit:validation>
+	</munit:test>
+
+</mule>

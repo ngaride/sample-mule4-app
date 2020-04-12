@@ -1,0 +1,7 @@
+{ 
+  "RunId":"12345678",
+  "JobName":"Salesforce",
+  "ErrorType":"DYNAMODB:ValidationException",
+  "ErrorDescription":"One or more parameter values were invalid: Missing the key RunId in the item (Service: AmazonDynamoDBv2;  Status Code: 400; Error Code: ValidationException; Request ID: B08LUM05RK7BL0GBSNG1KJ6GENVV4KQNSO5AEMVJF66Q9ASUAAJG)",
+  "Status":"Error"
+ }

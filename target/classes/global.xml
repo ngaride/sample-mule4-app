@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:inf-core="http://www.mulesoft.org/schema/mule/inf-core" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/inf-core http://www.mulesoft.org/schema/mule/inf-core/current/mule-inf-core.xsd">
+	<http:request-config name="okta_sapi_HTTPS_Request_configuration" doc:name="HTTP Request configuration" doc:id="25968c9f-480b-4083-ae02-06d7f7721a56" >
+		<http:request-connection protocol="HTTPS" host="${secure::eai.sapi.env.host}" port="${secure::okta.sapi.port}" connectionIdleTimeout="100000">
+			<tls:context >
+				<tls:trust-store path="okta-everbridge-papi-truststore.ts" password="MuleSoft"/>
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b945703c-121c-4b60-8a0d-7617538c11ba">
+		<http:listener-connection host="${secure::http.host}" port="${secure::http.port}" />
+	</http:listener-config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="ced45b8b-ed98-419d-808b-90d0749c69c3" file="eai-con-bat-${env.name}.properties" key="${secret.key}" />
+	<http:request-config name="everbridge_sapi_HTTPS_Request_configuration" doc:name="HTTP Request configuration" doc:id="400b1344-0251-43b1-8413-24e2fc2039d6" >
+		<http:request-connection protocol="HTTPS" host="${secure::eai.sapi.env.host}" port="${secure::everbridge.sapi.port}" connectionIdleTimeout="100000" >
+			<tls:context >
+				<tls:trust-store path="okta-everbridge-papi-truststore.ts" password="MuleSoft"/>
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<http:request-config name="Logging_HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="7daa8d68-6405-4823-8462-b8ab78bc3598" >
+		<http:request-connection host="${secure::logging.api.host}" port="${secure::logging.api.port}" />
+	</http:request-config>
+	<apikit:config outboundHeadersMapName="outboundHeadersMapName" httpStatusVarName="httpStatus" doc:name="Router" doc:id="9346a4b8-2a06-491c-bb65-de713b25e690" name="corporate-okta-everbridge-userdata-papi-config" raml="okta-everbridge-userdata-papi.raml" >
+		<apikit:flow-mappings >
+			<apikit:flow-mapping resource="/get-userdata" action="post" flow-ref="post:\get-userdata:everbridge-papi-config" />
+		</apikit:flow-mappings>
+	</apikit:config>
+	<http:request-config name="ControlM_HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="8cf72ef8-2d6f-4970-98fc-14b6b9af7dac" >
+		<http:request-connection host="${secure::http.request.host}" protocol="HTTPS">
+			<tls:context >
+				<tls:trust-store path="okta-everbridge-papi-truststore.ts" password="MuleSoft" />
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<api-gateway:autodiscovery apiId="${secure::okta.everbridge.papi.api.autodiscovery}" doc:name="OKTA-Everbridge PAPI" doc:id="80466bd9-374a-4de5-a793-ead758642d05" flowRef="everbridge-papi-main" />
+	<json-logger:config name="JSON_Logger_Config" doc:name="JSON Logger Config" doc:id="d6040364-a6c0-4e8f-aa7d-7284ab6f7ea6" />
+	<os:config name="ObjectStore_Config" doc:name="ObjectStore Config" doc:id="af48139e-4561-41d0-8923-ee47fbca6d95" />
+	<os:object-store name="Object_store_lenel" doc:name="Object store" doc:id="6614a26a-640b-434c-b95d-b34607fedc7b" expirationIntervalUnit="DAYS" />
+	<os:object-store name="OKTA_Everbridge_Date_ObjectStore" doc:name="Object store" doc:id="e0d295dc-e62b-47ab-91d8-601100c53401" config-ref="ObjectStore_Config" />
+<http:request-config name="HTTP_Request_configuration_MSSQL" doc:name="HTTP Request configuration" doc:id="316ba40c-1c1e-4c89-be46-efa55d57aeba" basePath="${secure::mssql.sapi.basepath}">
+		<http:request-connection host="${secure::mssql.sapi.host}" port="${secure::mssql.sapi.port}" protocol="HTTPS">
+			<tls:context >
+				<tls:trust-store path="truststore.jks" password="${secure::truststore.password}" type="jks" />
+			</tls:context>
+			<http:authentication >
+				<http:basic-authentication username="${secure::mssql.username}" password="${secure::mssql.pwd}"/>
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration-SFTP-identitykey-SAPI"
+		doc:name="HTTP Request configuration" doc:id="cf91e0f4-d9f4-4020-b00e-fc7017addcbe" basePath="${secure::ecm.mci.sftp.sys.basepath}">
+		<http:request-connection host="${secure::ecm.mci.sftp.sys.host}"
+			port="${secure::ecm.mci.sftp.sys.port}" protocol="HTTPS" connectionIdleTimeout="120000">
+			<tls:context>
+				<tls:trust-store path="truststore.jks"
+					password="${secure::truststore.password}" type="jks" />
+			</tls:context>
+			<http:authentication >
+				<http:basic-authentication username="${secure::ecm.mci.sftp.sys.username}" password="${secure::ecm.mci.sftp.sys.password}" />
+			</http:authentication>
+		
+</http:request-connection>
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration-email" doc:name="HTTP Request configuration" doc:id="a62cea84-5e0d-4b91-9b92-b50275d0af62" basePath="${secure::lenel.email.basepath}" >
+		<http:request-connection host="${secure::lenel.email.host}" port="${secure::lenel.email.port}" protocol="HTTPS">
+			<tls:context >
+				<tls:trust-store type="jks" path="truststore.jks" password="${secure::truststore.password}"/>
+			</tls:context>
+			<http:authentication >
+				<http:basic-authentication username="${secure::lenel.email.username}" password="${secure::lenel.email.pwd}" />
+			</http:authentication>
+		
+</http:request-connection>
+	</http:request-config>
+		<http:request-config name="HTTP_Request_configuration_prometheus" doc:name="HTTP Request configuration" doc:id="b0ec6056-996f-4c6f-8cde-13ad7d032ff9" basePath="#[vars.refinery_config.filename]" >
+		<http:request-connection protocol="HTTPS" host="#[vars.soap_host[0]]" port="#[vars.refinery_config.sftpPort]" />
+	</http:request-config>
+	<inf-core:config name="P66_Core_Config" doc:name="P66 Core Config" doc:id="926b0e24-64bf-40ea-954e-cea3e625a3fe" env="${env.name}" />
+	<api-gateway:autodiscovery apiId="${secure::lenel.mci.papi.autodiscovery}" doc:name="API Autodiscovery" doc:id="65116fb0-781d-4a7c-8f81-551ae49bd7f9" flowRef="lenel-mssql-sftp-papi-main"/>
+</mule>

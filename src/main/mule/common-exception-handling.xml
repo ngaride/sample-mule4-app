@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:inf-core="http://www.mulesoft.org/schema/mule/inf-core" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/inf-core http://www.mulesoft.org/schema/mule/inf-core/current/mule-inf-core.xsd">
+	<error-handler name="common-exception-handling:set-500-api-error-response" doc:id="e2b7f318-55e0-4d92-a048-2bb34b94d40e">
+		<on-error-continue enableNotifications="false" logException="true" doc:name="On Error Continue" doc:id="1b9e1a45-853f-466e-9b37-8dccc6f9f6dd">
+			<inf-core:custom-logger doc:id="99d82ee2-8e31-4c96-ae06-75106f208f9e" message="There was an error that was caught by the global exception handler. " category="Global Exception" status_code='#[if(error.errorMessage.typedAttributes.statusCode?) error.errorMessage.typedAttributes.statusCode as String else "500"]' type='#[error.errorType.namespace as String ++ ":" ++ error.errorType.identifier as String]' detail="#[error.description]" doc:name="Logger: Common Error" config-ref="P66_Core_Config"/>
+			<ee:transform doc:name="+errorResponse, httpStatus" doc:id="9f8a5707-d11f-49ac-9908-5ef11bb9fd73">
+				<ee:message>
+					<ee:set-payload resource="dwl/exception/exception-handling-set-500-api-error-response.dwl" />
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[error.errorMessage.typedAttributes.statusCode default 500]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		
+</on-error-continue>
+	</error-handler>
+</mule>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="lenel-mci-papi-impl-test-suite.xml" />
+	<munit:test name="lenel-mci-papi-impl-test-suite-lenel-mciFlow-SchedulerTest" description="Test" doc:id="93091558-134c-4adb-8b06-dbbb2191b52a" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when MS-SQL" doc:id="84d76f97-feb7-453d-ba3e-bf0d3587a4f7" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:id" whereValue="b7a0e200-567f-4368-9f17-553fdae2a248" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[[
+  {
+    "mssql_port": 1433,
+    "mssql_host": "wedbp1202.phillips66.net",
+    "mssql_database": "accesscontrol",
+    "sftp_prod_host": "int.managementcontrols.com",
+    "refinery_code": "LCR",
+    "mssql_username": "LCRECMP",
+    "mssql_query": "[AccessControl].[dbo].[UDO_ECM_GATELOG_LCR]",
+    "sftp_username": "p66lcr",
+    "environment": "dev",
+    "refinery_name": "Lake Charles Refinery",
+    "sftp_contenttype": "text/plain",
+    "sftp_port": 22,
+    "mssql_password": "SmVWNDN4WXZUM2l4",
+    "sftp_filename": "P66_ACSLCR_",
+    "s_num": 13,
+    "sftp_qa_host": "int.qa.managementcontrols.com",
+    "sftp_cid": "",
+    "sftp_directorypath": "keys/P66LCR_private.ppk"
+  }]]' mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when Ms-SQL" doc:id="15df04c4-db45-4828-b1bb-7c9bde458e36" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:id" whereValue="b7a0e200-567f-4368-9f17-553fdae2a248" />
+					<munit-tools:with-attribute attributeName="doc:id" whereValue="9afda133-c466-4eb7-a344-45ed455225be" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[[
+  {
+    "unique_company_id": 10032,
+    "reader_id": "717",
+    "mi": "JB",
+    "unique_employee_id": 29688,
+    "reader_description": "PERM Coke Gate S Drv In (3-0)",
+    "event_date_time": "2019-06-18T02:29:28",
+    "company_name": "Sentinel Transportation",
+    "location_code": "LCR ",
+    "last_name": "Booker",
+    "event_direction": "I",
+    "first_name": "James"
+  },
+  {
+    "unique_company_id": 10032,
+    "reader_id": "717",
+    "mi": " ",
+    "unique_employee_id": 38898,
+    "reader_description": "PERM Coke Gate S Drv In (3-0)",
+    "event_date_time": "2019-06-18T02:48:11",
+    "company_name": "Sentinel Transportation",
+    "location_code": "LCR ",
+    "last_name": "Hartman",
+    "event_direction": "I",
+    "first_name": "Robert"
+  }]]' mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when SFTP" doc:id="d41ff49e-ecfe-4928-b8ab-b0b6a28001b1" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:id" whereValue="24a09ad5-2f80-409a-bf99-a83a998d0471" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock ControlM" doc:id="5c37252f-14fa-45e1-8c13-5c5c8e414f0d" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:id" whereValue="875c5e87-9596-46bc-ae51-ed8abbfebff0" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[%dw 2.0 output application/json --- [ { "unique_company_id": 0, "reader_id": "3464", "mi": " ", "unique_employee_id": 62105, "reader_description": "MUSTER-AREA-KEYPAD", "event_date_time": "2019-03-01T19:04:19", "company_name": "", "location_code": "GCF ", "last_name": "Caraballo", "event_direction": "I", "first_name": "Omar" }, { "unique_company_id": 0, "reader_id": "3464", "mi": " ", "unique_employee_id": 62105, "reader_description": "MUSTER-AREA-KEYPAD", "event_date_time": "2019-03-01T19:28:31", "company_name": "", "location_code": "GCF ", "last_name": "Caraballo", "event_direction": "I", "first_name": "Omar" } ]]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock ControlM Error" doc:id="d33302c2-5417-4bbe-b5b6-8a9b74cdb9fb" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:id" whereValue="4f1a1d9a-d6e8-448d-bdfb-29d62e5d7835" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[%dw 2.0 output application/json --- [ { "unique_company_id": 0, "reader_id": "3464", "mi": " ", "unique_employee_id": 62105, "reader_description": "MUSTER-AREA-KEYPAD", "event_date_time": "2019-03-01T19:04:19", "company_name": "", "location_code": "GCF ", "last_name": "Caraballo", "event_direction": "I", "first_name": "Omar" }, { "unique_company_id": 0, "reader_id": "3464", "mi": " ", "unique_employee_id": 62105, "reader_description": "MUSTER-AREA-KEYPAD", "event_date_time": "2019-03-01T19:28:31", "company_name": "", "location_code": "GCF ", "last_name": "Caraballo", "event_direction": "I", "first_name": "Omar" } ]]' mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock EMAIL" doc:id="36ee4ac3-5104-4a32-be2c-e7ac5e7b53a9" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute attributeName="doc:name" whereValue="Email Template" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to lenel-mciFlow-Scheduler" doc:id="a83d8ec8-9bc8-4b91-92d4-fab1143cd235" name="lenel-mciFlow-Scheduler"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="92c94cbb-68ae-4e13-ab56-987658a682c0" expression="#[payload]" is="#[MunitTools::notNullValue()]" message="Payload is null!" />
+		</munit:validation>
+	</munit:test>
+
+</mule>
